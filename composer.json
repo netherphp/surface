@@ -11,6 +11,7 @@
 	],
 	"require":{
 		"php": ">=5.4.0",
+		"netherphp/ki":"dev-master",
 		"netherphp/option":"dev-master"
 	},
 	"require-dev":{ },

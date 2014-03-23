@@ -18,8 +18,7 @@ Option::Define([
 ////////////////
 ////////////////
 
-/* TODO
-Ki::Queue('m-request-redirect',function(){
+Ki::Queue('nether-avenue-redirect',function(){
 	// if a redirect was requested shut down the automatic surface instance and
 	// throw away whatever it already collected.
 
@@ -30,7 +29,7 @@ Ki::Queue('m-request-redirect',function(){
 	return;
 },true);
 
-Ki::Queue('m-setup',function(){
+Ki::Queue('nether-setup',function(){
 	// start the automatic surface instance if enabled.
 
 	if(!Option::Get('surface-automatic'))
@@ -41,7 +40,7 @@ Ki::Queue('m-setup',function(){
 
 	return;
 });
-*/
+
 
 ////////////////
 ////////////////
