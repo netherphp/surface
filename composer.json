@@ -1,0 +1,22 @@
+{
+	"name":"netherphp/surface",
+	"description":"A template rendering system.",
+	"keywords":["php","template"],
+	"license":"BSD-2-Clause",
+	"authors":[
+		{	"name":"Bob Majdak Jr",
+			"email":"bob@nether.io",
+			"homepage":"http://nether.io",
+			"role":"developer" }
+	],
+	"require":{
+		"php": ">=5.4.0",
+		"netherphp/option":"dev-master"
+	},
+	"require-dev":{ },
+	"autoload":{
+		"psr-0": {
+			"Nether\\": "src/"
+		}
+	}
+}
