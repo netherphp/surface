@@ -11,8 +11,10 @@ Option::Define([
 	'surface-theme-common' => 'common',
 	'surface-style'        => 'default',
 	'surface-theme-root'   => sprintf('%s/themes',Option::Get('nether-web-root')),
-	'surface-theme-path'    => sprintf('%s/themes',trim(Option::Get('nether-web-path'),'/')),
-	'surface-automatic'    => true
+	'surface-theme-path'   => sprintf('%s/themes',trim(Option::Get('nether-web-path'),'/')),
+	'surface-automatic'    => true,
+	'nether-surface-autostash'  => true,
+	'nether-surface-stash-name' => 'surface'
 ]);
 
 ////////////////
@@ -35,12 +37,14 @@ Ki::Queue('nether-setup',function(){
 	if(!Option::Get('surface-automatic'))
 	return;
 
-	Stash::Set('surface',($surface = new Surface));
-	$surface->CaptureStart();
+	$surface = new Surface;
 
+	if(Option::Get('nether-surface-autostash'))
+	Stash::Set(Option::Get('nether-surface-stash-name'),$surface);
+
+	$surface->CaptureStart();
 	return;
 });
-
 
 ////////////////
 ////////////////
@@ -71,7 +75,6 @@ class Surface {
 	/*//
 	@type boolean
 	//*/
-
 	////////////////
 	////////////////
 
@@ -121,7 +124,7 @@ class Surface {
 		$scope = $this->GetRenderScope();
 		$this->PrepareCommonData();
 
-		if(!m_require($template,$scope))
+		if(!Nether\Util\File::Execute($template,$scope))
 		throw new \Exception("error opening {$template} for {$this->Theme}");
 
 		$this->Rendered = true;
@@ -133,18 +136,18 @@ class Surface {
 	return the path to the design.phtml for the current theme.
 	//*/
 
-		$filename = m_repath_fs(sprintf(
+		$filename = sprintf(
 			'%s/%s/design.phtml',
 			Option::Get('surface-theme-root'),
 			$this->Theme
-		));
+		);
 
 		if($commonfb && !file_exists($filename)) {
-			$filename = m_repath_fs(sprintf(
+			$filename = sprintf(
 				'%s/%s/design.phtml',
 				Option::Get('surface-theme-root'),
 				Option::Get('surface-theme-common')
-			));
+			);
 		}
 
 		return $filename;
@@ -192,7 +195,7 @@ class Surface {
 
 		// generate keywords ////////
 
-		if(!$this->Get('page-keywords'))
+		if(!$this->Get('page-keywords') && Option::Get('app-keywords'))
 		$this->Set('page-keywords',implode(',',Option::Get('app-keywords')));
 
 		if(is_array($this->Get('page-keywords')))
@@ -284,11 +287,11 @@ class Surface {
 
 		$scope = $this->GetRenderScope();
 
-		if(!m_require($areafile,$scope))
+		if(!Nether\Util\File::Execute($areafile,$scope))
 		throw new \Exception("error loading area file {$input} ({$areafile})");
 	}
 
-	public function Get() {
+	public function Get($what) {
 	/*//
 	@argv string Key
 	@argv array KeyList
@@ -298,40 +301,26 @@ class Surface {
 	values associated with them will be returned instead.
 	//*/
 
-		$argv = new \Util\Verse(func_get_args(),[
-			['string'],
-			[array('string')]
-		]);
+		if(is_string($what)) {
+			if(array_key_exists($what,$this->Storage)) {
+				return $this->Storage[$what];
+			} else return false;
+		}
 
-		if(!$argv->Matched)
-		throw new \Exception('expects [string|array(string)]');
-
-		switch($argv->FormatKey) {
-			case 0: {
-				if(array_key_exists($argv->Input[0],$this->Storage))
-				return $this->Storage[$argv->Input[0]];
-
-				else
-				return null;
-			}
-
-			case 1: {
-				$return = array();
-				foreach($argv->Input[0] as $key) {
-					if(array_key_exists($key,$this->Storage))
+		if(is_array($what)) {
+			$return = [];
+			foreach($what as $key) {
+				if(array_key_exists($key,$this->Storage)) {
 					$return[$key] = $this->Storage[$key];
-
-					else
-					$return[$key] = null;
-				}
-				return $return;
+				} else $return[$key] = false;
 			}
+			return $return;
 		}
 
 		return false;
 	}
 
-	public function Set() {
+	public function Set($what,$value=null) {
 	/*//
 	@argv string Key, Mixed Value
 	@argv array KeyValueList
@@ -339,24 +328,14 @@ class Surface {
 	associative array of multiple keys and values to set.
 	//*/
 
-		$argv = new \Util\Verse(func_get_args(),[
-			['string','any'],
-			['array']
-		]);
+		if(is_string($what)) {
+			$this->Storage[$what] = $value;
+			return;
+		}
 
-		if(!$argv->Matched)
-		throw new \Exception('expects [string,mixed|array(string,mixed)]');
-
-		switch($argv->FormatKey) {
-			case 0: {
-				$this->Storage[$argv->Input[0]] = $argv->Input[1];
-				break;
-			}
-			case 1: {
-				foreach($argv->Input[0] as $key => $value)
-				$this->Storage[$key] = $value;
-				break;
-			}
+		if(is_array($what)) {
+			foreach($what as $key => $value)
+			$this->Storage[$key] = $value;
 		}
 
 		return;
