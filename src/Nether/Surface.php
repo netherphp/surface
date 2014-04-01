@@ -7,6 +7,27 @@ use \Nether;
 ////////////////
 
 Option::Define([
+	'nether-surface-autocapture' => true,
+	/*//option//
+	@name nether-surface-autocapture
+	@type bool
+	@default true
+	//*/
+
+	'nether-surface-autostash' => true,
+	/*//option//
+	@name nether-surface-autostash
+	@type bool
+	@default true
+	//*/
+
+	'nether-surface-stash-name' => 'surface',
+	/*//option//
+	@name nether-surface-stash-name
+	@type string
+	@default "avenue"
+	//*/
+
 	'surface-theme'        => 'default',
 	'surface-theme-common' => 'common',
 	'surface-style'        => 'default',
@@ -24,13 +45,13 @@ Ki::Queue('nether-avenue-redirect',function(){
 	// if a redirect was requested shut down the automatic surface instance and
 	// throw away whatever it already collected.
 
-	if(!Option::Get('surface-automatic'))
-	return;
-
+	if(Stash::Get('surface'))
 	Stash::Get('surface')->CaptureStop(false);
+
 	return;
 },true);
 
+/*
 Ki::Queue('nether-setup',function(){
 	// start the automatic surface instance if enabled.
 
@@ -45,6 +66,7 @@ Ki::Queue('nether-setup',function(){
 	$surface->CaptureStart();
 	return;
 });
+*/
 
 ////////////////
 ////////////////
@@ -85,6 +107,12 @@ class Surface {
 
 		$this->Rendered = false;
 		$this->Storage['stdout'] = '';
+
+		if(Nether\Option::Get('nether-surface-autostash'))
+		Nether\Stash::Set(Nether\Option::Get('nether-surface-stash-name'),$this);
+
+		if(Nether\Option::Get('nether-surface-autocapture'))
+		$this->CaptureStart();
 
 		return;
 	}
