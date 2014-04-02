@@ -7,23 +7,23 @@ use \Nether;
 ////////////////
 
 Option::Define([
-	'nether-surface-autocapture' => true,
+	'surface-autocapture' => true,
 	/*//option//
-	@name nether-surface-autocapture
+	@name surface-autocapture
 	@type bool
 	@default true
 	//*/
 
-	'nether-surface-autostash' => true,
+	'surface-autostash' => true,
 	/*//option//
-	@name nether-surface-autostash
+	@name surface-autostash
 	@type bool
 	@default true
 	//*/
 
-	'nether-surface-stash-name' => 'surface',
+	'surface-stash-name' => 'surface',
 	/*//option//
-	@name nether-surface-stash-name
+	@name surface-stash-name
 	@type string
 	@default "avenue"
 	//*/
@@ -32,41 +32,23 @@ Option::Define([
 	'surface-theme-common' => 'common',
 	'surface-style'        => 'default',
 	'surface-theme-root'   => sprintf('%s/themes',Option::Get('nether-web-root')),
-	'surface-theme-path'   => sprintf('%s/themes',trim(Option::Get('nether-web-path'),'/')),
-	'surface-automatic'    => true,
-	'nether-surface-autostash'  => true,
-	'nether-surface-stash-name' => 'surface'
+	'surface-theme-path'   => sprintf('%s/themes',trim(Option::Get('nether-web-path'),'/'))
 ]);
 
 ////////////////
 ////////////////
 
-Ki::Queue('nether-avenue-redirect',function(){
+Ki::Queue('avenue-redirect',function(){
 	// if a redirect was requested shut down the automatic surface instance and
 	// throw away whatever it already collected.
 
-	if(Stash::Get('surface'))
-	Stash::Get('surface')->CaptureStop(false);
+	$surface = Stash::Get(Option::Get('surface-stash-name'));
+
+	if($surface && $surface instanceof Surface)
+	$surface->CaptureStop(false);
 
 	return;
 },true);
-
-/*
-Ki::Queue('nether-setup',function(){
-	// start the automatic surface instance if enabled.
-
-	if(!Option::Get('surface-automatic'))
-	return;
-
-	$surface = new Surface;
-
-	if(Option::Get('nether-surface-autostash'))
-	Stash::Set(Option::Get('nether-surface-stash-name'),$surface);
-
-	$surface->CaptureStart();
-	return;
-});
-*/
 
 ////////////////
 ////////////////
@@ -97,6 +79,7 @@ class Surface {
 	/*//
 	@type boolean
 	//*/
+
 	////////////////
 	////////////////
 
@@ -108,10 +91,10 @@ class Surface {
 		$this->Rendered = false;
 		$this->Storage['stdout'] = '';
 
-		if(Nether\Option::Get('nether-surface-autostash'))
-		Nether\Stash::Set(Nether\Option::Get('nether-surface-stash-name'),$this);
+		if(Option::Get('surface-autostash'))
+		Stash::Set(Option::Get('surface-stash-name'),$this);
 
-		if(Nether\Option::Get('nether-surface-autocapture'))
+		if(Option::Get('surface-autocapture'))
 		$this->CaptureStart();
 
 		return;
