@@ -163,8 +163,11 @@ surface-theme-path (web url path).
 		$this->Style = Option::Get('surface-style');
 
 		// stash if autostash is enabled.
-		if(Option::Get('surface-autostash'))
-		Stash::Set(Option::Get('surface-stash-name'),$this);
+		if(Option::Get('surface-autostash')) {
+			if(!Stash::Has(Option::Get('surface-stash-name'))) {
+				Stash::Set(Option::Get('surface-stash-name'),$this);
+			}
+		}
 
 		// begin capture if autocapture is enabled.
 		if(Option::Get('surface-autocapture'))
