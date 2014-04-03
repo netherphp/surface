@@ -28,11 +28,56 @@ Option::Define([
 	@default "avenue"
 	//*/
 
-	'surface-theme'        => 'default',
+	'surface-theme' => 'default',
+	/*//option//
+	@name surface-theme
+	@type string
+	@default "default"
+	//*/
+
 	'surface-theme-common' => 'common',
-	'surface-style'        => 'default',
-	'surface-theme-root'   => sprintf('%s/themes',Option::Get('nether-web-root')),
-	'surface-theme-path'   => sprintf('%s/themes',trim(Option::Get('nether-web-path'),'/'))
+	/*//option//
+	@name surface-theme-option
+	@type string
+	@default "common"
+	//*/
+
+	'surface-style' => 'default',
+	/*//option//
+	@name surface-style
+	@type string
+	@default "default"
+	//*/
+
+	'surface-theme-root' => sprintf(
+		'%s/themes',
+		Option::Get('nether-web-root')
+	),
+	/*//option//
+	@name surface-theme-root
+	@type string
+	@default "%nether-web-root%/themes"
+	the filesystem path to the themes directory.
+	//*/
+
+	'surface-theme-path' => sprintf(
+		'%s/themes',
+		trim(Option::Get('nether-web-path'),'/')
+	),
+	/*//option//
+	@name surface-theme-path
+	@type string
+	@default "%nether-web-path%/themes"
+	the web path to the themes directory.
+	//*/
+
+	'surface-title-brand' => true
+	/*//option//
+	@name surface-title-brand
+	@type bool
+	@default true
+	define if surface should brand the page title with the app-name.
+	//*/
 ]);
 
 ////////////////
@@ -45,7 +90,7 @@ Ki::Queue('avenue-redirect',function(){
 	$surface = Stash::Get(Option::Get('surface-stash-name'));
 
 	if($surface && $surface instanceof Surface)
-	$surface->CaptureStop(false);
+	$surface->Stop(false);
 
 	return;
 },true);
@@ -54,20 +99,45 @@ Ki::Queue('avenue-redirect',function(){
 ////////////////
 
 class Surface {
+/*//
+this is the engine engine designed to make it easy to application output into
+page templates with ease. there is no template language, the templates are
+plain html with embedded php calls to the various surface methods.
 
-	public $Storage = [];
+to work as intended surface needs to know two things, which you should configure
+as early as possible in the application real booting process via Nether\Option.
+
+* nether-web-root - the filepath to the root of the public web directory.
+* nether-web-path - the web url base directory from the base domain. e.g. "/"
+
+armed with those values, surface will extrapolate where the themes are stored
+by way of the suggested Nether application structure. if you wish to be specific
+instead of allowing it to guess, you may specify the root and path for the
+theme directory via surface-theme-root (filesystem path) and
+surface-theme-path (web url path).
+//*/
+
+	protected $Rendered = false;
+	/*//
+	@type boolean
+	a sentinel marking if this object has performed a render operation yet or
+	not.
+	//*/
+
+	protected $Started = false;
+	/*//
+	@type boolean
+	a sentinel marking if this object has begun capturing a level of stdout
+	or not.
+	//*/
+
+	protected $Storage = [];
 	/*//
 	@type array
 	where this surface instance stores the data to be used for rendering.
 	//*/
 
-	public $Theme;
-	/*//
-	@type string
-	the name of the theme to render in.
-	//*/
-
-	public $Style;
+	protected $Style;
 	/*//
 	@type string
 	the name of the subtheme for the theme to use if it wants. the library
@@ -75,9 +145,10 @@ class Surface {
 	to make.
 	//*/
 
-	public $Rendered;
+	protected $Theme;
 	/*//
-	@type boolean
+	@type string
+	the name of the theme to render in.
 	//*/
 
 	////////////////
@@ -85,17 +156,19 @@ class Surface {
 
 	public function __construct() {
 
+		$this->Storage['stdout'] = '';
+
+		// pull in default settings.
 		$this->Theme = Option::Get('surface-theme');
 		$this->Style = Option::Get('surface-style');
 
-		$this->Rendered = false;
-		$this->Storage['stdout'] = '';
-
+		// stash if autostash is enabled.
 		if(Option::Get('surface-autostash'))
 		Stash::Set(Option::Get('surface-stash-name'),$this);
 
+		// begin capture if autocapture is enabled.
 		if(Option::Get('surface-autocapture'))
-		$this->CaptureStart();
+		$this->Start();
 
 		return;
 	}
@@ -113,9 +186,8 @@ class Surface {
 	shutdown method provided for the stash automatic shutdown.
 	//*/
 
-		if(!$this->Rendered && $this->Capturing) {
-			$this->Render();
-		}
+		if(!$this->Rendered);
+		$this->Render();
 
 		return;
 	}
@@ -129,92 +201,100 @@ class Surface {
 	begin the rendering operation using the full page template.
 	//*/
 
-		if($this->Capturing) $this->CaptureStop(true);
+		// grab the standard output if we were recording it.
+		if($this->Started)
+		$this->Stop(true);
 
-		$template = $this->GetTemplateFilename();
+		// allow application components to bolt data into the theme scope via
+		// the surface-render-scope ki.
 		$scope = $this->GetRenderScope();
-		$this->PrepareCommonData();
 
-		if(!Nether\Util\File::Execute($template,$scope))
+		// run through the framework settings to generate some common meta data
+		// like page title if the data hasn't already been defined.
+		$this->PrepareTitle();
+		$this->PrepareKeywords();
+		$this->PrepareDescription();
+
+		// attempt to load the page template.
+		if(!Nether\Util\File::Execute($this->GetTemplateFilename(),$scope))
 		throw new \Exception("error opening {$template} for {$this->Theme}");
 
 		$this->Rendered = true;
+		return;
 	}
 
-	protected function GetTemplateFilename($commonfb=true) {
+	////////////////
+	////////////////
+
+	protected function PrepareTitle() {
 	/*//
-	@return string
-	return the path to the design.phtml for the current theme.
+	generate a page-title if one has not yet been defined. also perform branding
+	if page title branding is enabled.
 	//*/
 
-		$filename = sprintf(
-			'%s/%s/design.phtml',
-			Option::Get('surface-theme-root'),
-			$this->Theme
-		);
-
-		if($commonfb && !file_exists($filename)) {
-			$filename = sprintf(
-				'%s/%s/design.phtml',
-				Option::Get('surface-theme-root'),
-				Option::Get('surface-theme-common')
-			);
+		// if no page title has been defined attempt to auto generate one from
+		// the application name and description.
+		if(!$this->Get('page-title')) {
+			if(Option::Get('app-name') && Option::Get('app-short-desc')) {
+				$this->Set('page-title',sprintf(
+					'%s - %s',
+					Option::Get('app-name'),
+					Option::Get('app-short-desc')
+				));
+			} else if(Option::Get('app-name')) {
+				$this->Set('page-title',Option::Get('app-name'));
+			}
 		}
 
-		return $filename;
+		// if we have a page title, attempt to seo brand it with the application
+		// name as defined.
+		else {
+			if(Option::Get('surface-title-brand') && Option::Get('app-name')) {
+				$this->Set('page-title',sprintf(
+					'%s - %s',
+					$this->Get('page-title'),
+					Option::Get('app-name')
+				));
+			}
+		}
+
+		return;
 	}
 
-	protected function GetRenderScope() {
+	protected function PrepareKeywords() {
 	/*//
-	@return array
-	allow other libraries to attach data to the render system for the scope of
-	the template files. works by creating an array that gets passed by reference
-	that other instances can be appended to. that scope is then passed to the
-	m_require function which allows a file to be included in a clean scope with
-	easy access to the objects needed.
-
-	other libraries should Queue Ki on the surface-get-render-scope key, and the
-	callable should have 1 argument that is an &$array.
+	generate a page-keywords if one has not yet been defined.
 	//*/
 
-		$scope = ['surface'=>$this];
-		Ki::Flow('surface-get-render-scope',[&$scope]);
-		return $scope;
-	}
+		// if no keywords have been defined then attempt to pull them from the
+		// application config.
+		if(!$this->Get('page-keywords')) {
+			if(is_array(Option::Get('app-keywords'))) {
+				$this->Set(
+					'page-keywords',
+					join(',',Option::Get('app-keywords'))
+				);
+			}
+		}
 
-	protected function PrepareCommonData() {
-	/*//
-	allow surface to fill in empty spots for commonly needed data using the
-	application configuration as a base.
-	//*/
 
-		// brand the page title ////////
-
-		if(!$this->Get('page-title'))
-		$this->Set('page-title',sprintf(
-			'%s - %s',
-			Option::Get('app-name'),
-			Option::Get('app-short-desc')
-		));
-
-		else
-		$this->Set('page-title',sprintf(
-			'%s - %s',
-			$this->Get('page-title'),
-			Option::Get('app-name')
-		));
-
-		// generate keywords ////////
-
-		if(!$this->Get('page-keywords') && Option::Get('app-keywords'))
-		$this->Set('page-keywords',implode(',',Option::Get('app-keywords')));
-
+		// we promote storing keywords as an array while the application is
+		// processing, but we will convert that array into a string for render
+		// happy fun render time.
 		if(is_array($this->Get('page-keywords')))
-		$this->Set('page-keywords',implode(',',$this->Get('page-keywords')));
+		$this->Set('page-keywords',join(',',$this->Get('page-keywords')));
 
-		// generate descriptions ////////
+		return;
+	}
 
-		if(!$this->Get('page-desc'))
+	protected function PrepareDescription() {
+	/*//
+	generate a page-desc if one has not yet been defined.
+	//*/
+
+		// if no description is set, attempt to get one from the application
+		// configuration.
+		if(!$this->Get('page-desc') && Option::Get('app-long-desc'))
 		$this->Set('page-desc',Option::Get('app-long-desc'));
 
 		return;
@@ -223,64 +303,58 @@ class Surface {
 	////////////////
 	////////////////
 
-	protected $Capturing = false;
-	/*//
-	@type boolean
-	a sentinel marking if this object has begin capturing a level of stdout
-	or not.
-	//*/
-
-	public function CaptureStart() {
+	public function Start() {
 	/*//
 	@return boolean
-	begin capturing stdout if this object has not already done so.
+	begin capturing stdout if this object has not already done so. returns if
+	the capture was a success or not... not that i have ever seen ob_start fail.
 	//*/
 
-		if(!$this->Capturing) {
-			$this->Capturing = true;
-			ob_start();
-			return true;
-		} else {
-			Ki::Flow(
-				'log-warning',
-				'this surface object is already capturing stdout.'
-			);
-			return false;
-		}
+		if(!$this->Started)
+		$this->Started = ob_start();
+
+		return $this->Started;
 	}
 
-	public function CaptureStop($append=true) {
+	public function Stop($append=true) {
 	/*//
 	@return mixed
 	@argv boolean Append default true
 	stop capturing stdout. if the append argument is true it will throw the
-	caught data into the storage array, else it will return it.
+	caught data into the storage array, else it will return and discard it.
 	//*/
 
-		if($this->Capturing) {
-			$this->Capturing = false;
+		if($this->Started) {
+			$this->Started = false;
+			$stdout = ob_get_clean();
+
+			Ki::Flow('surface-stdout',[&$stdout]);
+			/*//ki//
+			@name surface-stdout
+			@argv &string Output
+			allow the captured standard output to be filtered by plugins.
+			//*/
+
 			if($append) {
-				$stdout = ob_get_clean();
-				Ki::Flow('surface-stdout',[&$stdout]);
 				$this->Storage['stdout'] .= $stdout;
+				return;
+			} else {
+				return $stdout;
 			}
-			return;
-		} else {
-			Ki::Flow(
-				'log-warning',
-				'this surface object was not capturing stdout.'
-			);
-			return false;
 		}
+
+		return;
 	}
 
 	////////////////
 	////////////////
 
-	public function Area($input) {
+	public function Area($input,$return=false) {
 	/*//
-	@argv string Area
-	load an area file from the theme.
+	@argv string Area, bool ShouldReturn default false
+	@return string or null
+	load an area file from the theme. will print it by default unless it has
+	been requested it be returned instead.
 	//*/
 
 		$common = false;
@@ -288,7 +362,9 @@ class Surface {
 			$areafile = sprintf(
 				'%s/%s/area/%s.phtml',
 				Option::Get('surface-theme-root'),
-				((!$common)?($this->Theme):(Option::Get('surface-theme-common'))),
+				((!$common)?
+					($this->Theme):
+					(Option::Get('surface-theme-common'))),
 				$input
 			);
 
@@ -298,26 +374,35 @@ class Surface {
 
 		$scope = $this->GetRenderScope();
 
+		// capture the output if we asked to return the data.
+		if($return) ob_start();
+
 		if(!Nether\Util\File::Execute($areafile,$scope))
 		throw new \Exception("error loading area file {$input} ({$areafile})");
+
+		// return the captured data if requested.
+		return ($return)?(ob_get_clean()):(null);
 	}
 
 	public function Get($what) {
 	/*//
 	@argv string Key
-	@argv array KeyList
+	@argv array(string Key, ...)
 	@return mixed
 	return the value stored in this surface object. if given a string the value
 	associated with it is returned. if given an array of keys, an array of
 	values associated with them will be returned instead.
 	//*/
 
+		// if given a string find that value and return it.
 		if(is_string($what)) {
 			if(array_key_exists($what,$this->Storage)) {
 				return $this->Storage[$what];
 			} else return false;
 		}
 
+		// if given an array, search for all the keys and return an array
+		// indexed by the keys requested.
 		if(is_array($what)) {
 			$return = [];
 			foreach($what as $key) {
@@ -334,34 +419,129 @@ class Surface {
 	public function Set($what,$value=null) {
 	/*//
 	@argv string Key, Mixed Value
-	@argv array KeyValueList
+	@argv array(string Key => mixed Value, ...)
+	@return self
 	sets values in the surface storage. can take a string key and value, or an
 	associative array of multiple keys and values to set.
 	//*/
 
+		// if the first parameter was a string, the second is the value and
+		// we will store it.
 		if(is_string($what)) {
 			$this->Storage[$what] = $value;
 			return;
 		}
 
+		// if the first parameter was an array, then it will be treated as a
+		// key value list to be stored.
 		if(is_array($what)) {
 			foreach($what as $key => $value)
 			$this->Storage[$key] = $value;
 		}
 
-		return;
+		return $this;
 	}
 
 	public function Show($key) {
 	/*//
 	@argv string Key
+	@return self
 	echo the data under the selected key.
 	//*/
 
 		if(array_key_exists($key,$this->Storage))
 		echo $this->Storage[$key];
 
-		return;
+		return $this;
+	}
+
+	////////////////
+	////////////////
+
+	public function GetStyle() {
+	/*//
+	@return string or false
+	get the name of the substyle the theme will use.
+	//*/
+
+		return (($this->Style)?:(false));
+	}
+
+	public function GetTheme() {
+	/*//
+	@return string or false
+	get the name of the theme this surface will use.
+	//*/
+
+		return (($this->Theme)?:(false));
+	}
+
+	public function SetStyle($style) {
+	/*//
+	@argv string Style
+	@return self
+	set the name of the substyle to use.
+	//*/
+
+		$this->Style = (string)$style;
+		return $this;
+	}
+
+	public function SetTheme($theme) {
+	/*//
+	@argv string Theme
+	@return self
+	set the name of the theme to use.
+	//*/
+
+		$this->Theme = (string)$theme;
+		return $this;
+	}
+
+	////////////////
+	////////////////
+
+	protected function GetRenderScope() {
+	/*//
+	@return array
+	allow other libraries to attach data to the render system to create a
+	variable to be accessable within theme templates.
+	//*/
+
+		$scope = ['surface'=>$this];
+		Ki::Flow('surface-render-scope',[&$scope]);
+		/*//ki//
+		@name surface-render-scope
+		@argv &array ScopeList
+		passes an associative array reference around to anyone who cares to
+		listen and add to. the idea is that you can add a key and a value, and
+		that will become a variable that is accessable within surface templates.
+		//*/
+
+		return $scope;
+	}
+
+	protected function GetTemplateFilename($commonfb=true) {
+	/*//
+	@return string
+	return the path to the design.phtml for the current theme.
+	//*/
+
+		$filename = sprintf(
+			'%s/%s/design.phtml',
+			Option::Get('surface-theme-root'),
+			$this->Theme
+		);
+
+		if(!file_exists($filename) && $commonfb) {
+			$filename = sprintf(
+				'%s/%s/design.phtml',
+				Option::Get('surface-theme-root'),
+				Option::Get('surface-theme-common')
+			);
+		}
+
+		return $filename;
 	}
 
 	////////////////
@@ -369,8 +549,8 @@ class Surface {
 
 	public function FromTheme($input,$return=false) {
 	/*//
-	@return string
 	@argv string Input, boolean Return default false
+	@return string
 	prints or returns the string at the end of the surface uri. useful for
 	linking to theme resources.
 	//*/
@@ -392,8 +572,8 @@ class Surface {
 
 	public function FromCommon($input,$return=false) {
 	/*//
-	@return string
 	@argv string Input, boolean Return default false
+	@return string
 	prints or returns the string at the end of the surface uri. useful for
 	linking to shared resources.
 	//*/
@@ -438,7 +618,8 @@ class Surface {
 	public function FromPost($key,$return=false) {
 	/*//
 	@return string
-	gets the value from the post data making it html safe.
+	gets the value from the post data making it html safe. useful for dropping
+	data into html form value attributes easily.
 	//*/
 
 		$string = ((array_key_exists($key,$_POST))?
