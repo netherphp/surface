@@ -170,7 +170,7 @@ surface-theme-path (web url path).
 		}
 
 		// begin capture if autocapture is enabled.
-		if(Option::Get('surface-autocapture'))
+		if(Option::Get('surface-autocapture') && php_sapi_name() !== 'cli')
 		$this->Start();
 
 		return;
