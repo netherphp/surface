@@ -189,7 +189,7 @@ surface-theme-path (web url path).
 	shutdown method provided for the stash automatic shutdown.
 	//*/
 
-		if(!$this->Rendered);
+		if($this->Started && !$this->Rendered)
 		$this->Render();
 
 		return;
@@ -207,6 +207,10 @@ surface-theme-path (web url path).
 		// grab the standard output if we were recording it.
 		if($this->Started)
 		$this->Stop(true);
+
+		// check if we had decided on a theme yet.
+		if(!$this->Theme)
+		$this->Theme = Nether\Option::Get('surface-theme');
 
 		// allow application components to bolt data into the theme scope via
 		// the surface-render-scope ki.
