@@ -160,24 +160,32 @@ surface-theme-path (web url path).
 	////////////////
 	////////////////
 
-	public function __construct() {
+	public function __construct($opt=null) {
+		$opt = new Nether\Object($opt,[
+			'Theme' => Option::Get('surface-theme'),
+			'ThemeRoot' => Option::Get('surface-theme-root'),
+			'Style' => Option::Get('surface-style'),
+			'Autocapture' => Option::Get('surface-autocapture'),
+			'Autostash' => Option::Get('surface-autostash'),
+			'StashName' => Option::Get('surface-stash-name')
+		]);
 
 		$this->Storage['stdout'] = '';
 
 		// pull in default settings.
-		$this->Theme = Option::Get('surface-theme');
-		$this->ThemeRoot = Option::Get('surface-theme-root');
-		$this->Style = Option::Get('surface-style');
+		$this->Theme = $opt->Theme;
+		$this->ThemeRoot = $opt->ThemeRoot;
+		$this->Style = $opt->Style;
 
 		// stash if autostash is enabled.
-		if(Option::Get('surface-autostash')) {
-			if(!Stash::Has(Option::Get('surface-stash-name'))) {
-				Stash::Set(Option::Get('surface-stash-name'),$this);
+		if($opt->Autostash) {
+			if(!Stash::Has($opt->StashName)) {
+				Stash::Set($opt->StashName,$this);
 			}
 		}
 
 		// begin capture if autocapture is enabled.
-		if(Option::Get('surface-autocapture') && php_sapi_name() !== 'cli')
+		if($opt->Autocapture && php_sapi_name() !== 'cli')
 		$this->Start();
 
 		return;
