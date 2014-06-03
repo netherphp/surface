@@ -151,6 +151,12 @@ surface-theme-path (web url path).
 	the name of the theme to render in.
 	//*/
 
+	protected $ThemeRoot;
+	/*//
+	@type string
+	the directory all the themes are installed.
+	//*/
+
 	////////////////
 	////////////////
 
@@ -160,6 +166,7 @@ surface-theme-path (web url path).
 
 		// pull in default settings.
 		$this->Theme = Option::Get('surface-theme');
+		$this->ThemeRoot = Option::Get('surface-theme-root');
 		$this->Style = Option::Get('surface-style');
 
 		// stash if autostash is enabled.
@@ -368,7 +375,7 @@ surface-theme-path (web url path).
 		do {
 			$areafile = sprintf(
 				'%s/%s/area/%s.phtml',
-				Option::Get('surface-theme-root'),
+				$this->ThemeRoot,
 				((!$common)?
 					($this->Theme):
 					(Option::Get('surface-theme-common'))),
@@ -483,6 +490,15 @@ surface-theme-path (web url path).
 		return (($this->Theme)?:(false));
 	}
 
+	public function GetThemeRoot() {
+	/*//
+	@return string;
+	get the path the themes are installed in.
+	//*/
+
+		return $this->ThemeRoot;
+	}
+
 	public function SetStyle($style) {
 	/*//
 	@argv string Style
@@ -502,6 +518,17 @@ surface-theme-path (web url path).
 	//*/
 
 		$this->Theme = (string)$theme;
+		return $this;
+	}
+
+	public function SetThemeRoot($path) {
+	/*//
+	@argv string Path
+	@return self
+	set the path the themes are installed in.
+	//*/
+
+		$this->ThemeRoot = $path;
 		return $this;
 	}
 
@@ -536,14 +563,14 @@ surface-theme-path (web url path).
 
 		$filename = sprintf(
 			'%s/%s/design.phtml',
-			Option::Get('surface-theme-root'),
+			$this->ThemeRoot,
 			$this->Theme
 		);
 
 		if(!file_exists($filename) && $commonfb) {
 			$filename = sprintf(
 				'%s/%s/design.phtml',
-				Option::Get('surface-theme-root'),
+				$this->ThemeRoot,
 				Option::Get('surface-theme-common')
 			);
 		}
