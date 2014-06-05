@@ -213,7 +213,7 @@ surface-theme-path (web url path).
 	////////////////
 	////////////////
 
-	public function Render() {
+	public function Render($return=false) {
 	/*//
 	@return boolean
 	begin the rendering operation using the full page template.
@@ -238,11 +238,16 @@ surface-theme-path (web url path).
 		$this->PrepareDescription();
 
 		// attempt to load the page template.
+
+		if($return) ob_start();
+
 		if(!Nether\Util\File::Execute($this->GetTemplateFilename(),$scope))
 		throw new \Exception("error opening {$template} for {$this->Theme}");
 
 		$this->Rendered = true;
-		return;
+
+		if($return) return ob_get_clean();
+		else return;
 	}
 
 	////////////////
@@ -451,7 +456,7 @@ surface-theme-path (web url path).
 		// we will store it.
 		if(is_string($what)) {
 			$this->Storage[$what] = $value;
-			return;
+			return $this;
 		}
 
 		// if the first parameter was an array, then it will be treated as a
