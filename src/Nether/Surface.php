@@ -83,7 +83,7 @@ Option::Define([
 ////////////////
 ////////////////
 
-Ki::Queue('avenue-redirect',function(){
+Ki::Queue('nether-avenue-redirect',function(){
 	// if a redirect was requested shut down the automatic surface instance and
 	// throw away whatever it already collected.
 
@@ -241,7 +241,7 @@ surface-theme-path (web url path).
 
 		if($return) ob_start();
 
-		if(!Nether\Util\File::Execute($this->GetTemplateFilename(),$scope))
+		if(!Nether\Util\File::Execute($template = $this->GetTemplateFilename(),$scope))
 		throw new \Exception("error opening {$template} for {$this->Theme}");
 
 		$this->Rendered = true;
