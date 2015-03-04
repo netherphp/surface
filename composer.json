@@ -12,7 +12,7 @@
 	"require":{
 		"php": ">=5.4.0",
 		"netherphp/ki":"dev-master",
-		"netherphp/option":"dev-master"
+		"netherphp/option":"1.*"
 	},
 	"require-dev":{ },
 	"autoload":{
