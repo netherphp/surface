@@ -83,6 +83,7 @@ Option::Define([
 ////////////////
 ////////////////
 
+if(class_exists('Nether\Avenue\Router') && class_exists('Nether\Stash'))
 Ki::Queue('nether-avenue-redirect',function(){
 	// if a redirect was requested shut down the automatic surface instance and
 	// throw away whatever it already collected.
@@ -178,7 +179,7 @@ surface-theme-path (web url path).
 		$this->Style = $opt->Style;
 
 		// stash if autostash is enabled.
-		if($opt->Autostash) {
+		if($opt->Autostash && class_exists('Nether\Stash')) {
 			if(!Stash::Has($opt->StashName)) {
 				Stash::Set($opt->StashName,$this);
 			}
