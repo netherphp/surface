@@ -377,40 +377,98 @@ surface-theme-path (web url path).
 	////////////////
 	////////////////
 
+	////////////////////////////////////////////////////////////////////////////
+	// new area api ////////////////////////////////////////////////////////////
+
 	public function Area($input,$return=false) {
 	/*//
 	@argv string Area, bool ShouldReturn default false
 	@return string or null
-	load an area file from the theme. will print it by default unless it has
-	been requested it be returned instead.
+	@deprecated
+	this function exists for backwards compat and is basically a binary alias
+	to the GetArea and ShowArea methods.
 	//*/
 
-		$common = false;
-		do {
+		if(!$return) return $this->ShowArea($input);
+		else return $this->GetArea($input);
+	}
+
+	public function GetArea($which) {
+
+		// construct a stack of themes to search for the area file in. you can
+		// define them by prefixing areas and separating multiple themes with
+		// a semicolon. the configured theme and configured commonspace will
+		// be appended to the end as fallbacks.
+
+		// path/to/area
+		// something:path/to/area
+		// something:else:path/to/area
+
+		if(strpos($which,':') !== false) {
+			$themestack = explode(':',$which);
+
+			end($themestack);
+				$areapath = current($themestack);
+				unset($themestack[key($themestack)]);
+			reset($themestack);
+		} else {
+			$areapath = $which;
+			$themestack = [];
+		}
+
+		$themestack[] = $this->Theme;
+		$themestack[] = Option::Get('surface-theme-common');
+
+		////////
+		////////
+
+		// determine if the area file was found anywhere in our theme stack. we
+		// will stop at the first theme that had it and run with it.
+
+		$found = false;
+
+		foreach($themestack as $theme) {
 			$areafile = sprintf(
 				'%s/%s/area/%s.phtml',
 				$this->ThemeRoot,
-				((!$common)?
-					($this->Theme):
-					(Option::Get('surface-theme-common'))),
-				$input
+				$theme,
+				$areapath
 			);
 
-			if(file_exists($areafile)) break;
-			else $common = !$common;
-		} while($common);
+			if(file_exists($areafile)) {
+				$found = true;
+				break;
+			}
+		}
 
-		$scope = $this->GetRenderScope();
+		if(!$found) {
+			return "Surface Area {$which} could not be located.";
+		}
 
-		// capture the output if we asked to return the data.
-		if($return) ob_start();
+		////////
+		////////
 
-		if(!Nether\Util\File::Execute($areafile,$scope))
-		throw new \Exception("error loading area file {$input} ({$areafile})");
+		// run the area file within a protected scope.
 
-		// return the captured data if requested.
-		return ($return)?(ob_get_clean()):(null);
+		ob_start();
+		call_user_func(
+			function($__surface_file,$__surface_scope){
+				extract($__surface_scope);
+				require($__surface_file);
+			},
+			$areafile,
+			$this->GetRenderScope()
+		);
+		return ob_get_clean();
 	}
+
+	public function ShowArea($which) {
+		echo $this->GetArea($which);
+		return $this;
+	}
+
+	////////////////////////////////////////////////////////////////////////////
+	////////////////////////////////////////////////////////////////////////////
 
 	public function Get($what) {
 	/*//
