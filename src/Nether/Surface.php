@@ -20,6 +20,13 @@ Option::Define([
 	@type bool
 	@default true
 	//*/
+	
+	'surface-area-exception' => true,
+	/*//
+	@name surface-area-exception
+	@type bool
+	@default true
+	//*/
 
 	'surface-stash-name' => 'surface',
 	/*//option//
@@ -442,6 +449,10 @@ surface-theme-path (web url path).
 		}
 
 		if(!$found) {
+			if(Nether\Option::Get('surface-area-exception'))
+			throw new \Exception("Surface Area {$which} could not be located.");
+			
+			else
 			return "Surface Area {$which} could not be located.";
 		}
 
