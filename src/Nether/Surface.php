@@ -447,20 +447,6 @@ surface-theme-path (web url path).
 	// new area api ////////////////////////////////////////////////////////////
 
 	public function
-	Area($input,$return=false) {
-	/*//
-	@argv string Area, bool ShouldReturn default false
-	@return string or null
-	@deprecated
-	this function exists for backwards compat and is basically a binary alias
-	to the GetArea and ShowArea methods.
-	//*/
-
-		if(!$return) return $this->ShowArea($input);
-		else return $this->GetArea($input);
-	}
-
-	public function
 	GetArea($which) {
 	/*//
 	@argv string AreaFileRequest
@@ -746,4 +732,21 @@ surface-theme-path (web url path).
 		);
 	}
 
+	///////////////////////////////////////////////////////////////////////////
+	// deprecated / backwards compat crap /////////////////////////////////////
+
+	public function
+	Area($input,$return=false) {
+	/*//
+	@argv string Area, bool ShouldReturn default false
+	@return string or null
+	@deprecated
+	this function exists for backwards compat and is basically a binary alias
+	to the GetArea and ShowArea methods.
+	//*/
+
+		if(!$return) return $this->ShowArea($input);
+		else return $this->GetArea($input);
+	}
+	
 }
