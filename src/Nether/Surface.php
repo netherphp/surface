@@ -9,17 +9,17 @@ use \Exception;
 ////////////////////////
 
 Option::Define([
-	'surface-auto-capture'   => true,
-	'surface-auto-stash'     => 'surface',
-	'surface-theme'          => 'default',
-	'surface-theme-stack'    => [ 'common' ],
-	'surface-style'          => 'default',
-	'surface-title-brand'    => true,
-	'surface-theme-root'     => sprintf(
+	'surface-auto-capture' => true,
+	'surface-auto-stash' => 'surface',
+	'surface-theme' => 'default',
+	'surface-theme-stack' => [ 'common' ],
+	'surface-style' => 'default',
+	'surface-title-brand' => true,
+	'surface-theme-root' => sprintf(
 		'%s/themes',
 		Option::Get('nether-web-root')
 	),
-	'surface-theme-path'     => sprintf(
+	'surface-theme-path' => sprintf(
 		'%s/themes',
 		trim(Option::Get('nether-web-path'),'/')
 	)
@@ -63,13 +63,6 @@ theme directory via surface-theme-root (filesystem path) and
 surface-theme-path (web url path).
 //*/
 
-	protected $Rendered = false;
-	/*//
-	@type boolean
-	a sentinel marking if this object has performed a render operation yet or
-	not.
-	//*/
-
 	protected $Started = false;
 	/*//
 	@type boolean
@@ -83,6 +76,9 @@ surface-theme-path (web url path).
 	where this surface instance stores the data to be used for rendering.
 	//*/
 
+	////////////////////////
+	////////////////////////
+
 	protected $Style;
 	/*//
 	@type string
@@ -91,17 +87,41 @@ surface-theme-path (web url path).
 	to make.
 	//*/
 
+	public function
+	GetStyle() { return $this->Style; }
+
+	public function
+	SetStyle($style) { $this->Style = $style; return $this; }
+
+	////////
+	////////
+
 	protected $Theme;
 	/*//
 	@type string
 	the name of the theme to render in.
 	//*/
 
+	public function
+	GetTheme() { return $this->Theme; }
+
+	public function
+	SetTheme($theme) { $this->Theme = $theme; return $this; }
+
+	////////
+	////////
+
 	protected $ThemeRoot;
 	/*//
 	@type string
 	the directory all the themes are installed.
 	//*/
+
+	public function
+	GetThemeRoot() { return $this->ThemeRoot; }
+
+	public function
+	SetThemeRoot($path) { $this->ThemeRoot = $path; return $this; }
 
 	////////////////////////
 	////////////////////////
@@ -111,7 +131,7 @@ surface-theme-path (web url path).
 	/*//
 	handle object init.
 	//*/
-	
+
 		$opt = new Nether\Object($opt,[
 			'Theme'       => Option::Get('surface-theme'),
 			'ThemeRoot'   => Option::Get('surface-theme-root'),
@@ -146,8 +166,7 @@ surface-theme-path (web url path).
 	/*//
 	handle object destruct.
 	//*/
-		
-		$this->Stop();
+
 		$this->Render();
 		return;
 	}
@@ -178,7 +197,7 @@ surface-theme-path (web url path).
 	stop capturing stdout. if the append argument is true it will throw the
 	caught data into the storage array, else it will return and discard it.
 	//*/
-	
+
 		// nothing if we haven't started.
 		if(!$this->Started)
 		return false;
@@ -202,7 +221,7 @@ surface-theme-path (web url path).
 
 	////////////////////////
 	////////////////////////
-	
+
 	public function
 	Render($return=false) {
 	/*//
@@ -217,14 +236,10 @@ surface-theme-path (web url path).
 		// check if we had decided on a theme yet.
 		if(!$this->Theme)
 		$this->Theme = Nether\Option::Get('surface-theme');
-		
+
 		// determine the template file to use.
 		if(!($template = $this->GetThemeFile('design.phtml')))
 		throw new Exception("error opening {$template} for {$this->Theme}");
-
-		// allow application components to bolt data into the theme scope via
-		// the surface-render-scope ki.
-		$scope = $this->GetRenderScope();
 
 		// run through the framework settings to generate some common meta data
 		// like page title if the data hasn't already been defined.
@@ -234,23 +249,23 @@ surface-theme-path (web url path).
 
 		////////
 		////////
-				
+
 		ob_start();
 		call_user_func(function($__filename,$__scope){
 			extract($__scope); unset($__scope);
 			require($__filename);
-		},$template,$scope);
-		
+		},$template,$this->GetRenderScope());
+
 		if(!$return) {
 			// print it out if we didn't want it back.
 			echo ob_get_clean();
 			return;
 		} else {
-			// hand it back if we wanted it.		
+			// hand it back if we wanted it.
 			return ob_get_clean();
 		}
 	}
-	
+
 	////////////////
 	////////////////
 
@@ -354,11 +369,11 @@ surface-theme-path (web url path).
 	to the requested area relative to the current theme. it can also be
 	prefixed with a theme stack with colons to customise which theme this
 	request comes from.
-	
+
 	* index/home
 	* alt:index/home
 	* alt1:alt2:index/home
-	
+
 	with a technically infinite number of stacks. throws an exception if no
 	files were found to handle the surface area.
 	//*/
@@ -370,7 +385,7 @@ surface-theme-path (web url path).
 			"area/{$area}.phtml",
 			$stack
 		);
-		
+
 		if(!$filename)
 		throw new Exception("no surface area matching {$which} could be located.");
 
@@ -379,8 +394,8 @@ surface-theme-path (web url path).
 
 		ob_start();
 		call_user_func(function($__filename,$__scope){
-				extract($__scope); unset($__scope);
-				require($__filename);
+			extract($__scope); unset($__scope);
+			require($__filename);
 		},$filename,$this->GetRenderScope());
 		return ob_get_clean();
 	}
@@ -392,15 +407,16 @@ surface-theme-path (web url path).
 	@return self
 	wraps the GetArea method for instant printign.
 	//*/
-	
+
 		echo $this->GetArea($which);
 		return $this;
 	}
 
 	////////////////////////////////////////////////////////////////////////////
-	////////////////////////////////////////////////////////////////////////////
+	// data storage api ////////////////////////////////////////////////////////
 
-	public function Get($what) {
+	public function
+	Get($what) {
 	/*//
 	@argv string Key
 	@argv array(string Key, ...)
@@ -410,29 +426,48 @@ surface-theme-path (web url path).
 	values associated with them will be returned instead.
 	//*/
 
-		// if given a string find that value and return it.
-		if(is_string($what)) {
-			if(array_key_exists($what,$this->Storage)) {
-				return $this->Storage[$what];
-			} else return false;
-		}
+		if(is_string($what))
+		return $this->Get_ByString($what);
 
-		// if given an array, search for all the keys and return an array
-		// indexed by the keys requested.
-		if(is_array($what)) {
-			$return = [];
-			foreach($what as $key) {
-				if(array_key_exists($key,$this->Storage)) {
-					$return[$key] = $this->Storage[$key];
-				} else $return[$key] = false;
-			}
-			return $return;
-		}
+		if(is_array($what))
+		return $this->Get_ByArray($what);
 
 		return false;
 	}
 
-	public function Set($what,$value=null) {
+	protected function
+	Get_ByString($key) {
+	/*//
+	@argv string Key
+	@return mixed
+	return the data stored in the specified key.
+	//*/
+
+		if(array_key_exists($key,$this->Storage))
+		return $this->Storage[$key];
+
+		return false;
+	}
+
+	protected function
+	Get_ByArray($list) {
+	/*//
+	@argv array KeyList
+	@return array
+	given an array of keys to lookup, return an array of data
+	indexed by those same keys.
+	//*/
+
+		$return = [];
+
+		foreach($list as $key)
+		$return[$key] = $this->Get_ByString($key);
+
+		return $return;
+	}
+
+	public function
+	Set($what,$value=null) {
 	/*//
 	@argv string Key, Mixed Value
 	@argv array(string Key => mixed Value, ...)
@@ -441,24 +476,41 @@ surface-theme-path (web url path).
 	associative array of multiple keys and values to set.
 	//*/
 
-		// if the first parameter was a string, the second is the value and
-		// we will store it.
-		if(is_string($what)) {
-			$this->Storage[$what] = $value;
-			return $this;
-		}
+		if(is_string($what))
+		return $this->Set_ByString($what,$value);
 
-		// if the first parameter was an array, then it will be treated as a
-		// key value list to be stored.
-		if(is_array($what)) {
-			foreach($what as $key => $value)
-			$this->Storage[$key] = $value;
-		}
+		if(is_array($what))
+		return $this->Set_ByArray($what);
 
 		return $this;
 	}
 
-	public function Show($key) {
+	protected function
+	Set_ByString($key,$val) {
+	/*//
+	@argv string Key, mixed Val
+	@return self
+	//*/
+
+		$this->Storage[$key] = $val;
+		return $this;
+	}
+
+	protected function
+	Set_ByArray($data) {
+	/*//
+	@argv array Dataset
+	@return self
+	//*/
+
+		foreach($data as $key => $val)
+		$this->Set_ByString($key,$val);
+
+		return $this;
+	}
+
+	public function
+	Show($key) {
 	/*//
 	@argv string Key
 	@return self
@@ -468,69 +520,6 @@ surface-theme-path (web url path).
 		if(array_key_exists($key,$this->Storage))
 		echo $this->Storage[$key];
 
-		return $this;
-	}
-
-	////////////////
-	////////////////
-
-	public function GetStyle() {
-	/*//
-	@return string or false
-	get the name of the substyle the theme will use.
-	//*/
-
-		return (($this->Style)?:(false));
-	}
-
-	public function GetTheme() {
-	/*//
-	@return string or false
-	get the name of the theme this surface will use.
-	//*/
-
-		return (($this->Theme)?:(false));
-	}
-
-	public function GetThemeRoot() {
-	/*//
-	@return string;
-	get the path the themes are installed in.
-	//*/
-
-		return $this->ThemeRoot;
-	}
-
-	public function SetStyle($style) {
-	/*//
-	@argv string Style
-	@return self
-	set the name of the substyle to use.
-	//*/
-
-		$this->Style = (string)$style;
-		return $this;
-	}
-
-	public function SetTheme($theme) {
-	/*//
-	@argv string Theme
-	@return self
-	set the name of the theme to use.
-	//*/
-
-		$this->Theme = (string)$theme;
-		return $this;
-	}
-
-	public function SetThemeRoot($path) {
-	/*//
-	@argv string Path
-	@return self
-	set the path the themes are installed in.
-	//*/
-
-		$this->ThemeRoot = $path;
 		return $this;
 	}
 
@@ -553,7 +542,10 @@ surface-theme-path (web url path).
 
 		return $scope;
 	}
-	
+
+	////////////////
+	////////////////
+
 	protected function
 	GetThemeFile($name,$stack=null) {
 	/*//
@@ -565,7 +557,7 @@ surface-theme-path (web url path).
 	request. if found it returns the full filepath to that file - if not then
 	it returns boolean false.
 	//*/
-	
+
 		foreach($this->GetThemeStack($stack) as $theme) {
 			$filename = sprintf(
 				'%s/%s/%s',
@@ -573,18 +565,18 @@ surface-theme-path (web url path).
 				$theme,
 				$name
 			);
-			
+
 			// if this theme file was not found pray continue.
 			if(!file_exists($filename) || !is_readable($filename))
 			continue;
-			
+
 			// else it seems valid enough so use it.
 			return $filename;
-		}	
+		}
 
 		return false;
 	}
-	
+
 	protected function
 	GetThemeStack($input=null) {
 	/*//
@@ -593,10 +585,10 @@ surface-theme-path (web url path).
 	@return array
 	if given a string it will split the string on colons to generate the
 	input list of the theme stack. this is how stacks will be custom
-	selected by the area method. if given an array then that is just it. 
+	selected by the area method. if given an array then that is just it.
 	it returns a list of all the themes to check for requested files.
 	//*/
-	
+
 		if(is_string($input)) {
 			// accept a string:like:this for custom stacking.
 			$stack = explode(':',$input);
@@ -609,10 +601,10 @@ surface-theme-path (web url path).
 			// else start with an empty slate.
 			$stack = [];
 		}
-		
+
 		// append the configured theme.
 		$stack[] = Option::Get('surface-theme');
-		
+
 		// append the default theme stack.
 		if(is_array(Option::Get('surface-theme-stack'))) {
 			$stack = array_merge(
@@ -623,77 +615,34 @@ surface-theme-path (web url path).
 		elseif(is_string(Option::Get('surface-theme-stack'))) {
 			$stack[] = Option::Get('surface-theme');
 		}
-		
+
 		// and return the stack.
 		return $stack;
 	}
 
-	////////////////
-	////////////////
-
-	public function FromTheme($input,$return=false) {
+	public function
+	GetThemeURI($input) {
 	/*//
-	@argv string Input, boolean Return default false
+	@argv string Input
 	@return string
 	prints or returns the string at the end of the surface uri. useful for
-	linking to theme resources.
+	linking to theme resources. accepts theme stacking to the point where
+	you can overload the theme, but we will not test that the file exists
+	in this case, so it will just be from the top of the stack.
 	//*/
 
-		$output = sprintf(
+		$stack = explode(':',$input);
+		$file = array_pop($stack);
+
+		$stack = $this->GetThemeStack($stack);
+		reset($stack);
+
+		return sprintf(
 			'/%s/%s/%s',
 			trim(Option::Get('surface-theme-path'),'/'),
-			$this->Theme,
+			current($stack),
 			$input
 		);
-
-		if(!$return) {
-			echo $output;
-			return;
-		} else {
-			return $output;
-		}
-	}
-
-	public function FromRoot($input,$return=false) {
-	/*//
-	@return string
-	@arg string input, boolean Return default false
-	prints or returns the string at the end of the web uri. useful for linking
-	to other pages in the app.
-	//*/
-
-		$output = sprintf(
-			'%s/%s',
-			trim(Option::Get('nether-web-path'),'/'),
-			trim($input,'/')
-		);
-
-		if(!$return) {
-			echo $output;
-			return;
-		} else {
-			return $output;
-		}
-	}
-
-	public function FromPost($key,$return=false) {
-	/*//
-	@return string
-	gets the value from the post data making it html safe. useful for dropping
-	data into html form value attributes easily.
-	//*/
-
-		$string = ((array_key_exists($key,$_POST))?
-			(htmlentities($_POST[$key])):
-			('')
-		);
-
-		if(!$return) {
-			echo $string;
-			return;
-		} else {
-			return $string;
-		}
 	}
 
 }
