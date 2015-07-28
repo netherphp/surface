@@ -1,39 +1,85 @@
 <?php
 
 namespace Nether;
-
 use \Nether;
 use \Exception;
 
-////////////////////////
-////////////////////////
+///////////////////////////////////////////////////////////////////////////////
+// library options ////////////////////////////////////////////////////////////
 
 Option::Define([
+
 	'surface-auto-capture' => true,
+	/*//
+	@option surface-auto-capture boolean
+	if true, surface will start recording STDOUT into its overbuffer the
+	moment the object is created. if false, you will need to manually call
+	the Start method to begin recording.
+	//*/
+
 	'surface-auto-stash' => 'surface',
+	/*//
+	@option surface-auto-stash string
+	if a string and Nether\Stash exists, this is the key name Surface will
+	automatically tuck itself into. set to false to disable this behaviour.
+	//*/
+
 	'surface-theme' => 'default',
+	/*//
+	@option surface-theme string
+	the default value to use as the main page theme. this is the theme we will
+	pull the design.phtml for when all is ready to go.
+	//*/
+
 	'surface-theme-stack' => [ 'common' ],
-	'surface-style' => 'default',
+	/*//
+	@option surface-theme-stack array[string, ...]
+	a list of themes to fall back on if a file was requested from the
+	configured theme could not be found.
+	//*/
+
+	'surface-theme-style' => 'default',
+	/*//
+	@option surface-theme-style string
+	the default value to use as the "Style" of the theme. the style is not
+	used by anything in Surface, but exists here to provide a mechanism for
+	allowing something like a user selected subtheme, or whatever.
+	//*/
+
 	'surface-title-brand' => true,
-	'surface-theme-root' => sprintf(
-		'%s/themes',
-		Option::Get('nether-web-root')
-	),
-	'surface-theme-path' => sprintf(
-		'%s/themes',
-		trim(Option::Get('nether-web-path'),'/')
-	)
+	/*//
+	@option surface-title-brand boolean
+	if true it will attempt to brand your page-title value with data from
+	app name. if no page-title had ever been set by the app then it will
+	attempt ot use both app-name and app-short-desc.
+	//*/
+
+	'surface-theme-root' => sprintf('%s/themes',trim(Option::Get('nether-web-root'),'/')),
+	/*//
+	@option surface-theme-root string
+	defines the full filepath to the themes directory as the server needs to
+	know it.
+	//*/
+
+	'surface-theme-path' => sprintf('%s/themes',trim(Option::Get('nether-web-path'),'/'))
+	/*//
+	@option surface-theme-path string
+	defines the relative uri to the themes directory as the browser needs to
+	know it.
+	//*/
+
 ]);
 
-////////////////////////
-////////////////////////
+///////////////////////////////////////////////////////////////////////////////
+// library ki event handlers //////////////////////////////////////////////////
 
-if(class_exists('Nether\Avenue\Router') && class_exists('Nether\Stash'))
-Ki::Queue('nether-avenue-redirect',function(){
+Ki::Queue('avenue-redirect',function(){
 	// if a redirect was requested shut down the automatic surface instance and
 	// throw away whatever it already collected.
 
-	$surface = Stash::Get(Option::Get('surface-stash-name'));
+	if(!class_exists('Nether\Stash')) return;
+
+	$surface = Stash::Get(Option::Get('surface-auto-stash'));
 
 	if($surface && $surface instanceof Surface)
 	$surface->Stop(false);
@@ -41,14 +87,15 @@ Ki::Queue('nether-avenue-redirect',function(){
 	return;
 },true);
 
-////////////////////////
-////////////////////////
+///////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////
 
 class Surface {
 /*//
 this is the engine engine designed to make it easy to application output into
 page templates with ease. there is no template language, the templates are
-plain html with embedded php calls to the various surface methods.
+plain html with embedded php calls to the various surface methods. just in case
+you have forgotten, php *is* a templating language.
 
 to work as intended surface needs to know two things, which you should configure
 as early as possible in the application real booting process via Nether\Option.
@@ -68,6 +115,13 @@ surface-theme-path (web url path).
 	@type boolean
 	a sentinel marking if this object has begun capturing a level of stdout
 	or not.
+	//*/
+
+	protected $Rendered = false;
+	/*//
+	@type boolean
+	marks if this object has rendered before. this is mainly to prevent the
+	destruct from trying again if we had manually called Render prior.
 	//*/
 
 	protected $Storage = [];
@@ -123,13 +177,13 @@ surface-theme-path (web url path).
 	public function
 	SetThemeRoot($path) { $this->ThemeRoot = $path; return $this; }
 
-	////////////////////////
-	////////////////////////
+	///////////////////////////////////////////////////////////////////////////
+	// magic object behaviour methods /////////////////////////////////////////
 
 	public function
 	__Construct($opt=null) {
 	/*//
-	handle object init.
+	handle object construction.
 	//*/
 
 		$opt = new Nether\Object($opt,[
@@ -164,15 +218,42 @@ surface-theme-path (web url path).
 	public function
 	__Destruct() {
 	/*//
-	handle object destruct.
+	handle object destruction.
 	//*/
 
+		if(!$this->Rendered)
 		$this->Render();
+
 		return;
 	}
 
-	////////////////////////
-	////////////////////////
+	public function
+	__Invoke() {
+	/*//
+	@argv string Key
+	provide a shortcut for getting and setting data. if one argument
+	is provided then it will get the value. if two, it will set it.
+	//*/
+
+		$argv = func_get_args();
+		switch(count($argv)) {
+			case 1: {
+				return $this->Get($argv[0]);
+			}
+			case 2: {
+				$this->Set($argv[0],$argv[1]);
+				return $this;
+			}
+		}
+
+		return $this;
+	}
+
+	///////////////////////////////////////////////////////////////////////////
+	// rendering control api //////////////////////////////////////////////////
+
+	/*// these methods will manage the overbuffer recording and deal with
+	compiling the resulting page from the configured template. //*/
 
 	public function
 	Start() {
@@ -199,8 +280,7 @@ surface-theme-path (web url path).
 	//*/
 
 		// nothing if we haven't started.
-		if(!$this->Started)
-		return false;
+		if(!$this->Started) return false;
 
 		// else fetch the buffer.
 		$this->Started = false;
@@ -219,9 +299,6 @@ surface-theme-path (web url path).
 		return $stdout;
 	}
 
-	////////////////////////
-	////////////////////////
-
 	public function
 	Render($return=false) {
 	/*//
@@ -229,8 +306,10 @@ surface-theme-path (web url path).
 	begin the rendering operation using the full page template.
 	//*/
 
-		// grab the standard output if we were recording it.
-		if($this->Started)
+		// flag this as called.
+		$this->Rendered = true;
+
+		// fetch whatever is still hanging on in the buffer.
 		$this->Stop(true);
 
 		// check if we had decided on a theme yet.
@@ -266,71 +345,92 @@ surface-theme-path (web url path).
 		}
 	}
 
-	////////////////
-	////////////////
+	///////////////////////////////////////////////////////////////////////////
+	// metadata methods ///////////////////////////////////////////////////////
 
-	protected function PrepareTitle() {
+	/*// these methods will use the application configuration to generate some
+	common meta data that is useful for webpages. //*/
+
+	protected function
+	PrepareTitle() {
 	/*//
-	generate a page-title if one has not yet been defined. also perform branding
-	if page title branding is enabled.
+	generate or modify a page-title value.
 	//*/
 
-		// if no page title has been defined attempt to auto generate one from
-		// the application name and description.
-		if(!$this->Get('page-title')) {
-			if(Option::Get('app-name') && Option::Get('app-short-desc')) {
-				$this->Set('page-title',sprintf(
-					'%s - %s',
-					Option::Get('app-name'),
-					Option::Get('app-short-desc')
-				));
-			} else if(Option::Get('app-name')) {
-				$this->Set('page-title',Option::Get('app-name'));
-			}
-		}
+		if($this->Get('page-title'))
+		$this->PrepareTitle_FromExisting();
 
-		// if we have a page title, attempt to seo brand it with the application
-		// name as defined.
-		else {
-			if(Option::Get('surface-title-brand') && Option::Get('app-name')) {
-				$this->Set('page-title',sprintf(
-					'%s - %s',
-					$this->Get('page-title'),
-					Option::Get('app-name')
-				));
-			}
-		}
+		else
+		$this->PrepareTitle_FromNothing();
 
 		return;
 	}
 
-	protected function PrepareKeywords() {
+	protected function
+	PrepareTitle_FromNothing() {
+	/*//
+	and from the ashes will arise a new page title. if our view or app has
+	not yet described a page title then attempt to generate one if we have
+	other data like app name and description set.
+	//*/
+
+		// no name, no branding.
+		if(!Option::Get('surface-title-brand') || !Option::Get('app-name'))
+		return $this;
+
+		// if we have a description lets use it too.
+		if(Option::Get('app-short-desc'))
+		$this->Set('page-title',sprintf(
+			'%s - %s',
+			Option::Get('app-name'),
+			Option::Get('app-short-desc')
+		));
+
+		// else just use the app name.
+		else
+		$this->Set('page-title',Option::Get('app-name'));
+
+		return $this;
+	}
+
+	protected function
+	PrepareTitle_FromExisting() {
+	/*//
+	append the site name if enabled and defined to the page title that
+	was generated at some point by the app.
+	//*/
+
+		if(!Option::Get('surface-title-brand') || !Option::Get('app-name'))
+		return $this;
+
+		$this->Set('page-title',sprintf(
+			'%s - %s',
+			$this->Get('page-title'),
+			Option::Get('app-name')
+		));
+
+		return $this;
+	}
+
+	protected function
+	PrepareKeywords() {
 	/*//
 	generate a page-keywords if one has not yet been defined.
 	//*/
 
-		// if no keywords have been defined then attempt to pull them from the
-		// application config.
-		if(!$this->Get('page-keywords')) {
-			if(is_array(Option::Get('app-keywords'))) {
-				$this->Set(
-					'page-keywords',
-					join(',',Option::Get('app-keywords'))
-				);
-			}
-		}
+		// if the app has already defined keywords then do not overwite them.
+		if($this->Get('page-keywords'))
+		return $this;
 
+		// use the app keywords if defined.
+		if(Option::Get('app-keywords'))
+		$this->Set('page-keywords',Option::Get('app-keywords'));
 
-		// we promote storing keywords as an array while the application is
-		// processing, but we will convert that array into a string for render
-		// happy fun render time.
-		if(is_array($this->Get('page-keywords')))
-		$this->Set('page-keywords',join(',',$this->Get('page-keywords')));
-
-		return;
+		return $this;
 	}
 
-	protected function PrepareDescription() {
+	protected function
+	PrepareDescription() {
 	/*//
 	generate a page-desc if one has not yet been defined.
 	//*/
@@ -531,7 +631,9 @@ surface-theme-path (web url path).
 	/*//
 	@return array
 	allow other libraries to attach data to the render system to create a
-	variable to be accessable within theme templates.
+	variable to be accessable within theme templates. the scope is an
+	associative array passed around by reference. in the theme file it will
+	extract the array into variables.
 	//*/
 
 		$scope = ['surface'=>$this];
@@ -635,12 +737,11 @@ surface-theme-path (web url path).
 		$file = array_pop($stack);
 
 		$stack = $this->GetThemeStack($stack);
-		reset($stack);
 
 		return sprintf(
 			'/%s/%s/%s',
 			trim(Option::Get('surface-theme-path'),'/'),
-			current($stack),
+			$stack[0],
 			$input
 		);
 	}
