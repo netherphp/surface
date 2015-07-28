@@ -618,7 +618,7 @@ surface-theme-path (web url path).
 	//*/
 
 		if(array_key_exists($key,$this->Storage))
-		echo $this->Storage[$key];
+		echo htmlentities($this->Storage[$key]);
 
 		return $this;
 	}
