@@ -1,94 +1,32 @@
 <?php
 
 namespace Nether;
-use \Nether;
 
-////////////////
-////////////////
+use \Nether;
+use \Exception;
+
+////////////////////////
+////////////////////////
 
 Option::Define([
-	'surface-autocapture' => true,
-	/*//option//
-	@name surface-autocapture
-	@type bool
-	@default true
-	//*/
-
-	'surface-autostash' => true,
-	/*//option//
-	@name surface-autostash
-	@type bool
-	@default true
-	//*/
-	
-	'surface-area-exception' => true,
-	/*//
-	@name surface-area-exception
-	@type bool
-	@default true
-	//*/
-
-	'surface-stash-name' => 'surface',
-	/*//option//
-	@name surface-stash-name
-	@type string
-	@default "avenue"
-	//*/
-
-	'surface-theme' => 'default',
-	/*//option//
-	@name surface-theme
-	@type string
-	@default "default"
-	//*/
-
-	'surface-theme-common' => 'common',
-	/*//option//
-	@name surface-theme-option
-	@type string
-	@default "common"
-	//*/
-
-	'surface-style' => 'default',
-	/*//option//
-	@name surface-style
-	@type string
-	@default "default"
-	//*/
-
-	'surface-theme-root' => sprintf(
+	'surface-auto-capture'   => true,
+	'surface-auto-stash'     => 'surface',
+	'surface-theme'          => 'default',
+	'surface-theme-stack'    => [ 'common' ],
+	'surface-style'          => 'default',
+	'surface-title-brand'    => true,
+	'surface-theme-root'     => sprintf(
 		'%s/themes',
 		Option::Get('nether-web-root')
 	),
-	/*//option//
-	@name surface-theme-root
-	@type string
-	@default "%nether-web-root%/themes"
-	the filesystem path to the themes directory.
-	//*/
-
-	'surface-theme-path' => sprintf(
+	'surface-theme-path'     => sprintf(
 		'%s/themes',
 		trim(Option::Get('nether-web-path'),'/')
-	),
-	/*//option//
-	@name surface-theme-path
-	@type string
-	@default "%nether-web-path%/themes"
-	the web path to the themes directory.
-	//*/
-
-	'surface-title-brand' => true
-	/*//option//
-	@name surface-title-brand
-	@type bool
-	@default true
-	define if surface should brand the page title with the app-name.
-	//*/
+	)
 ]);
 
-////////////////
-////////////////
+////////////////////////
+////////////////////////
 
 if(class_exists('Nether\Avenue\Router') && class_exists('Nether\Stash'))
 Ki::Queue('nether-avenue-redirect',function(){
@@ -103,8 +41,8 @@ Ki::Queue('nether-avenue-redirect',function(){
 	return;
 },true);
 
-////////////////
-////////////////
+////////////////////////
+////////////////////////
 
 class Surface {
 /*//
@@ -165,17 +103,21 @@ surface-theme-path (web url path).
 	the directory all the themes are installed.
 	//*/
 
-	////////////////
-	////////////////
+	////////////////////////
+	////////////////////////
 
-	public function __construct($opt=null) {
+	public function
+	__Construct($opt=null) {
+	/*//
+	handle object init.
+	//*/
+	
 		$opt = new Nether\Object($opt,[
-			'Theme' => Option::Get('surface-theme'),
-			'ThemeRoot' => Option::Get('surface-theme-root'),
-			'Style' => Option::Get('surface-style'),
-			'Autocapture' => Option::Get('surface-autocapture'),
-			'Autostash' => Option::Get('surface-autostash'),
-			'StashName' => Option::Get('surface-stash-name')
+			'Theme'       => Option::Get('surface-theme'),
+			'ThemeRoot'   => Option::Get('surface-theme-root'),
+			'Style'       => Option::Get('surface-style'),
+			'AutoCapture' => Option::Get('surface-auto-capture'),
+			'AutoStash'   => Option::Get('surface-auto-stash')
 		]);
 
 		$this->Storage['stdout'] = '';
@@ -185,43 +127,84 @@ surface-theme-path (web url path).
 		$this->ThemeRoot = $opt->ThemeRoot;
 		$this->Style = $opt->Style;
 
-		// stash if autostash is enabled.
-		if($opt->Autostash && class_exists('Nether\Stash')) {
-			if(!Stash::Has($opt->StashName)) {
-				Stash::Set($opt->StashName,$this);
-			}
+		// if auto stashing is enabled.
+		if(is_string($opt->AutoStash) && class_exists('Nether\Stash')) {
+			if(!Stash::Has($opt->AutoStash))
+			Stash::Set($opt->AutoStash,$this);
 		}
 
-		// begin capture if autocapture is enabled.
-		if($opt->Autocapture && php_sapi_name() !== 'cli')
+		// begin capture if autocapture is enabled and this is not the
+		// command line interface.
+		if($opt->AutoCapture && php_sapi_name() !== 'cli')
 		$this->Start();
 
 		return;
 	}
 
-	public function __destruct() {
-		$this->Shutdown();
+	public function
+	__Destruct() {
+	/*//
+	handle object destruct.
+	//*/
+		
+		$this->Stop();
+		$this->Render();
 		return;
 	}
 
-	////////////////
-	////////////////
+	////////////////////////
+	////////////////////////
 
-	public function Shutdown() {
+	public function
+	Start() {
 	/*//
-	shutdown method provided for the stash automatic shutdown.
+	@return boolean
+	begin capturing stdout if this object has not already done so. returns if
+	the capture was a success or not... not that i have ever seen ob_start fail.
 	//*/
 
-		if($this->Started && !$this->Rendered)
-		$this->Render();
+		// don't allow obception.
+		if(!$this->Started)
+		$this->Started = ob_start();
 
-		return;
+		return $this->Started;
 	}
 
-	////////////////
-	////////////////
+	public function
+	Stop($keep=true) {
+	/*//
+	@return mixed
+	@argv boolean KeepBuffer default true
+	stop capturing stdout. if the append argument is true it will throw the
+	caught data into the storage array, else it will return and discard it.
+	//*/
+	
+		// nothing if we haven't started.
+		if(!$this->Started)
+		return false;
 
-	public function Render($return=false) {
+		// else fetch the buffer.
+		$this->Started = false;
+		$stdout = ob_get_clean();
+
+		// allow things to filter this content.
+		Ki::Flow('surface-stdout',[&$stdout]);
+
+		// append it if we elected to keep it.
+		if($keep) {
+			$this->Storage['stdout'] .= $stdout;
+			return true;
+		}
+
+		// else return it and forget it.
+		return $stdout;
+	}
+
+	////////////////////////
+	////////////////////////
+	
+	public function
+	Render($return=false) {
 	/*//
 	@return boolean
 	begin the rendering operation using the full page template.
@@ -234,6 +217,10 @@ surface-theme-path (web url path).
 		// check if we had decided on a theme yet.
 		if(!$this->Theme)
 		$this->Theme = Nether\Option::Get('surface-theme');
+		
+		// determine the template file to use.
+		if(!($template = $this->GetThemeFile('design.phtml')))
+		throw new Exception("error opening {$template} for {$this->Theme}");
 
 		// allow application components to bolt data into the theme scope via
 		// the surface-render-scope ki.
@@ -245,19 +232,25 @@ surface-theme-path (web url path).
 		$this->PrepareKeywords();
 		$this->PrepareDescription();
 
-		// attempt to load the page template.
-
-		if($return) ob_start();
-
-		if(!Nether\Util\File::Execute($template = $this->GetTemplateFilename(),$scope))
-		throw new \Exception("error opening {$template} for {$this->Theme}");
-
-		$this->Rendered = true;
-
-		if($return) return ob_get_clean();
-		else return;
+		////////
+		////////
+				
+		ob_start();
+		call_user_func(function($__filename,$__scope){
+			extract($__scope); unset($__scope);
+			require($__filename);
+		},$template,$scope);
+		
+		if(!$return) {
+			// print it out if we didn't want it back.
+			echo ob_get_clean();
+			return;
+		} else {
+			// hand it back if we wanted it.		
+			return ob_get_clean();
+		}
 	}
-
+	
 	////////////////
 	////////////////
 
@@ -335,59 +328,11 @@ surface-theme-path (web url path).
 		return;
 	}
 
-	////////////////
-	////////////////
-
-	public function Start() {
-	/*//
-	@return boolean
-	begin capturing stdout if this object has not already done so. returns if
-	the capture was a success or not... not that i have ever seen ob_start fail.
-	//*/
-
-		if(!$this->Started)
-		$this->Started = ob_start();
-
-		return $this->Started;
-	}
-
-	public function Stop($append=true) {
-	/*//
-	@return mixed
-	@argv boolean Append default true
-	stop capturing stdout. if the append argument is true it will throw the
-	caught data into the storage array, else it will return and discard it.
-	//*/
-
-		if($this->Started) {
-			$this->Started = false;
-			$stdout = ob_get_clean();
-
-			Ki::Flow('surface-stdout',[&$stdout]);
-			/*//ki//
-			@name surface-stdout
-			@argv &string Output
-			allow the captured standard output to be filtered by plugins.
-			//*/
-
-			if($append) {
-				$this->Storage['stdout'] .= $stdout;
-				return;
-			} else {
-				return $stdout;
-			}
-		}
-
-		return;
-	}
-
-	////////////////
-	////////////////
-
 	////////////////////////////////////////////////////////////////////////////
 	// new area api ////////////////////////////////////////////////////////////
 
-	public function Area($input,$return=false) {
+	public function
+	Area($input,$return=false) {
 	/*//
 	@argv string Area, bool ShouldReturn default false
 	@return string or null
@@ -400,80 +345,54 @@ surface-theme-path (web url path).
 		else return $this->GetArea($input);
 	}
 
-	public function GetArea($which) {
+	public function
+	GetArea($which) {
+	/*//
+	@argv string AreaFileRequest
+	@return string
+	attempt to fetch the result of the specified area file. it takes a string
+	to the requested area relative to the current theme. it can also be
+	prefixed with a theme stack with colons to customise which theme this
+	request comes from.
+	
+	* index/home
+	* alt:index/home
+	* alt1:alt2:index/home
+	
+	with a technically infinite number of stacks. throws an exception if no
+	files were found to handle the surface area.
+	//*/
 
-		// construct a stack of themes to search for the area file in. you can
-		// define them by prefixing areas and separating multiple themes with
-		// a semicolon. the configured theme and configured commonspace will
-		// be appended to the end as fallbacks.
+		$stack = explode(':',$which);
+		$area = array_pop($stack);
 
-		// path/to/area
-		// something:path/to/area
-		// something:else:path/to/area
-
-		if(strpos($which,':') !== false) {
-			$themestack = explode(':',$which);
-
-			end($themestack);
-				$areapath = current($themestack);
-				unset($themestack[key($themestack)]);
-			reset($themestack);
-		} else {
-			$areapath = $which;
-			$themestack = [];
-		}
-
-		$themestack[] = $this->Theme;
-		$themestack[] = Option::Get('surface-theme-common');
-
-		////////
-		////////
-
-		// determine if the area file was found anywhere in our theme stack. we
-		// will stop at the first theme that had it and run with it.
-
-		$found = false;
-
-		foreach($themestack as $theme) {
-			$areafile = sprintf(
-				'%s/%s/area/%s.phtml',
-				$this->ThemeRoot,
-				$theme,
-				$areapath
-			);
-
-			if(file_exists($areafile)) {
-				$found = true;
-				break;
-			}
-		}
-
-		if(!$found) {
-			if(Nether\Option::Get('surface-area-exception'))
-			throw new \Exception("Surface Area {$which} could not be located.");
-			
-			else
-			return "Surface Area {$which} could not be located.";
-		}
+		$filename = $this->GetThemeFile(
+			"area/{$area}.phtml",
+			$stack
+		);
+		
+		if(!$filename)
+		throw new Exception("no surface area matching {$which} could be located.");
 
 		////////
 		////////
-
-		// run the area file within a protected scope.
 
 		ob_start();
-		call_user_func(
-			function($__surface_file,$__surface_scope){
-				extract($__surface_scope);
-				require($__surface_file);
-			},
-			$areafile,
-			$this->GetRenderScope()
-		);
+		call_user_func(function($__filename,$__scope){
+				extract($__scope); unset($__scope);
+				require($__filename);
+		},$filename,$this->GetRenderScope());
 		return ob_get_clean();
 	}
 
-	public function ShowArea($which) {
+	public function
+	ShowArea($which) {
+	/*//
+	@argv string AreaFileRequest
+	@return self
+	wraps the GetArea method for instant printign.
+	//*/
+	
 		echo $this->GetArea($which);
 		return $this;
 	}
@@ -618,7 +537,8 @@ surface-theme-path (web url path).
 	////////////////
 	////////////////
 
-	protected function GetRenderScope() {
+	protected function
+	GetRenderScope() {
 	/*//
 	@return array
 	allow other libraries to attach data to the render system to create a
@@ -626,39 +546,86 @@ surface-theme-path (web url path).
 	//*/
 
 		$scope = ['surface'=>$this];
-		Ki::Flow('surface-render-scope',[&$scope]);
-		/*//ki//
-		@name surface-render-scope
-		@argv &array ScopeList
-		passes an associative array reference around to anyone who cares to
-		listen and add to. the idea is that you can add a key and a value, and
-		that will become a variable that is accessable within surface templates.
-		//*/
+		Ki::Flow(
+			'surface-render-scope',
+			[&$scope]
+		);
 
 		return $scope;
 	}
-
-	protected function GetTemplateFilename($commonfb=true) {
+	
+	protected function
+	GetThemeFile($name,$stack=null) {
 	/*//
-	@return string
-	return the path to the design.phtml for the current theme.
+	@argv string Filename
+	@argv string Filename, string StackDefine
+	@argv string Filename, array StackList
+	@return string or false.
+	run through the theme stack and attempt to locate a file that matches the
+	request. if found it returns the full filepath to that file - if not then
+	it returns boolean false.
 	//*/
-
-		$filename = sprintf(
-			'%s/%s/design.phtml',
-			$this->ThemeRoot,
-			$this->Theme
-		);
-
-		if(!file_exists($filename) && $commonfb) {
+	
+		foreach($this->GetThemeStack($stack) as $theme) {
 			$filename = sprintf(
-				'%s/%s/design.phtml',
+				'%s/%s/%s',
 				$this->ThemeRoot,
-				Option::Get('surface-theme-common')
+				$theme,
+				$name
+			);
+			
+			// if this theme file was not found pray continue.
+			if(!file_exists($filename) || !is_readable($filename))
+			continue;
+			
+			// else it seems valid enough so use it.
+			return $filename;
+		}	
+
+		return false;
+	}
+	
+	protected function
+	GetThemeStack($input=null) {
+	/*//
+	@argv string ThemeStackSpecification
+	@argv array ThemeStackList
+	@return array
+	if given a string it will split the string on colons to generate the
+	input list of the theme stack. this is how stacks will be custom
+	selected by the area method. if given an array then that is just it. 
+	it returns a list of all the themes to check for requested files.
+	//*/
+	
+		if(is_string($input)) {
+			// accept a string:like:this for custom stacking.
+			$stack = explode(':',$input);
+		}
+		elseif(is_array($input)) {
+			// accept a straight array.
+			$stack = $input;
+		}
+		else {
+			// else start with an empty slate.
+			$stack = [];
+		}
+		
+		// append the configured theme.
+		$stack[] = Option::Get('surface-theme');
+		
+		// append the default theme stack.
+		if(is_array(Option::Get('surface-theme-stack'))) {
+			$stack = array_merge(
+				$stack,
+				Option::Get('surface-theme-stack')
 			);
 		}
-
-		return $filename;
+		elseif(is_string(Option::Get('surface-theme-stack'))) {
+			$stack[] = Option::Get('surface-theme');
+		}
+		
+		// and return the stack.
+		return $stack;
 	}
 
 	////////////////
@@ -676,29 +643,6 @@ surface-theme-path (web url path).
 			'/%s/%s/%s',
 			trim(Option::Get('surface-theme-path'),'/'),
 			$this->Theme,
-			$input
-		);
-
-		if(!$return) {
-			echo $output;
-			return;
-		} else {
-			return $output;
-		}
-	}
-
-	public function FromCommon($input,$return=false) {
-	/*//
-	@argv string Input, boolean Return default false
-	@return string
-	prints or returns the string at the end of the surface uri. useful for
-	linking to shared resources.
-	//*/
-
-		$output = sprintf(
-			'/%s/%s/%s',
-			trim(Option::Get('surface-theme-path'),'/'),
-			Option::Get('surface-theme-common'),
 			$input
 		);
 
