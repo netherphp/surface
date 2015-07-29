@@ -189,7 +189,7 @@ surface-theme-path (web url path).
 		$opt = new Nether\Object($opt,[
 			'Theme'       => Option::Get('surface-theme'),
 			'ThemeRoot'   => Option::Get('surface-theme-root'),
-			'Style'       => Option::Get('surface-style'),
+			'Style'       => Option::Get('surface-theme-style'),
 			'AutoCapture' => Option::Get('surface-auto-capture'),
 			'AutoStash'   => Option::Get('surface-auto-stash')
 		]);
@@ -596,15 +596,17 @@ surface-theme-path (web url path).
 	}
 
 	public function
-	Show($key) {
+	Show($key,$safety=true) {
 	/*//
 	@argv string Key
 	@return self
 	echo the data under the selected key.
 	//*/
 
-		if(array_key_exists($key,$this->Storage))
-		echo htmlentities($this->Storage[$key]);
+		if(array_key_exists($key,$this->Storage)) {
+			if($safety) echo htmlentities($this->Storage[$key]);
+			else echo $this->Storage[$key];
+		}
 
 		return $this;
 	}
@@ -691,7 +693,7 @@ surface-theme-path (web url path).
 		}
 
 		// append the configured theme.
-		$stack[] = Option::Get('surface-theme');
+		$stack[] = $this->Theme;
 
 		// append the default theme stack.
 		if(is_array(Option::Get('surface-theme-stack'))) {
