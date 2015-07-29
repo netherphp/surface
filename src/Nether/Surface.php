@@ -54,14 +54,14 @@ Option::Define([
 	attempt ot use both app-name and app-short-desc.
 	//*/
 
-	'surface-theme-root' => sprintf('%s/themes',trim(Option::Get('nether-web-root'),'/')),
+	'surface-theme-root' => sprintf('%s/themes',rtrim(Option::Get('nether-web-root'),'/')),
 	/*//
 	@option surface-theme-root string
 	defines the full filepath to the themes directory as the server needs to
 	know it.
 	//*/
 
-	'surface-theme-path' => sprintf('%s/themes',trim(Option::Get('nether-web-path'),'/'))
+	'surface-theme-path' => sprintf('%s/themes',rtrim(Option::Get('nether-web-path'),'/'))
 	/*//
 	@option surface-theme-path string
 	defines the relative uri to the themes directory as the browser needs to
@@ -728,7 +728,7 @@ surface-theme-path (web url path).
 			'/%s/%s/%s',
 			trim(Option::Get('surface-theme-path'),'/'),
 			$stack[0],
-			$input
+			$file
 		);
 	}
 
@@ -748,5 +748,5 @@ surface-theme-path (web url path).
 		if(!$return) return $this->ShowArea($input);
 		else return $this->GetArea($input);
 	}
-	
+
 }
