@@ -5,6 +5,8 @@
 [![Packagist](https://img.shields.io/packagist/v/netherphp/surface.svg)](https://packagist.org/packages/netherphp/surface)
 [![Packagist](https://img.shields.io/packagist/dt/netherphp/surface.svg)](https://packagist.org/packages/netherphp/surface)
 
+
+
 ## Installing
 
 Require this package in your composer.json. This will also include Object, Stash, and Option.
@@ -61,6 +63,8 @@ instead, which is created in the template scopes for you.**
 
 All my examples are going to assume PHP 5.6 because I can have nice things.
 
+
+
 ## Starting Surface
 
 Surface uses Nether Option to handle base configuration. As a bare minimum it
@@ -87,6 +91,8 @@ If you do nothing else, whenever your application ends Surface will
 automatically throw itself together and chuck out the page at the very last
 moment.
 
+
+
 ## Using Surface
 
 At any point in your application you can access that Surface instance
@@ -96,10 +102,13 @@ through the Nether Stash.
 	->Set('name',$user->Name)
 	->Set('email',$user->Email)
 	->ShowArea('forms/user-change-info');
-
+	
 This will make the values of `name` and `email` available to the theme engine
 and then print out the `{$theme}/area/forms/user-change-info.phtml` surface
 area.
+
+At any point inside the template (.phtml) files you can access surface via
+the `$surface` variable. If you are on PHP 5.6+ you can use `$this` instead.
 
 	<form>
 		<div>
@@ -114,6 +123,8 @@ area.
 
 The show method will automatically `htmlentities()` the data for you. If you
 need the data straight up use `echo $this->Get('key')` instead.
+
+
 
 ## Testing
 
