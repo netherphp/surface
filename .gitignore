@@ -1,0 +1,4 @@
+#bof
+/vendor/
+/composer.lock
+#eof
