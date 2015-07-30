@@ -24,6 +24,13 @@ Option::Define([
 	automatically tuck itself into. set to false to disable this behaviour.
 	//*/
 
+	'surface-auto-render' => true,
+	/*//
+	@option surface-auto-render boolean
+	if true, surface will automatically render the final product when the
+	object instance is destroyed.
+	//*/
+
 	'surface-theme' => 'default',
 	/*//
 	@option surface-theme string
@@ -133,6 +140,22 @@ surface-theme-path (web url path).
 	////////////////////////
 	////////////////////////
 
+	protected $AutoRender = false;
+	/*//
+	@type bool
+	if this object should automatically render when it is destroyed. this value
+	is populated by the option surface-auto-render on creation.
+	//*/
+
+	public function
+	GetAutoRender() { return $this->AutoRender; }
+
+	public function
+	SetAutoRender($b) { $this->AutoRender = (bool)$b; return $this; }
+
+	////////
+	////////
+
 	protected $Style;
 	/*//
 	@type string
@@ -191,12 +214,14 @@ surface-theme-path (web url path).
 			'ThemeRoot'   => Option::Get('surface-theme-root'),
 			'Style'       => Option::Get('surface-theme-style'),
 			'AutoCapture' => Option::Get('surface-auto-capture'),
-			'AutoStash'   => Option::Get('surface-auto-stash')
+			'AutoStash'   => Option::Get('surface-auto-stash'),
+			'AutoRender'  => Option::Get('surface-auto-render')
 		]);
 
 		$this->Storage['stdout'] = '';
 
 		// pull in default settings.
+		$this->AutoRender = $opt->AutoRender;
 		$this->Theme = $opt->Theme;
 		$this->ThemeRoot = $opt->ThemeRoot;
 		$this->Style = $opt->Style;
@@ -221,7 +246,7 @@ surface-theme-path (web url path).
 	handle object destruction.
 	//*/
 
-		if(!$this->Rendered)
+		if($this->AutoRender && !$this->Rendered)
 		$this->Render();
 
 		return;
