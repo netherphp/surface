@@ -117,3 +117,11 @@ area.
 The show method will automatically `htmlentities()` the data for you. If you
 need the data straight up use `echo $this->Get('key')` instead.
 
+## Testing
+
+This project uses PHPUnit to test.
+
+	composer install
+	phpunit --bootstrap vendor/autoload.php tests
+
+
