@@ -51,11 +51,9 @@ which it will attempt to find in the `/opt/website/www/themes/default/area`
 directory. In the main area of the page it dumped the main application output.
 
 **Note: The `$this` will only work if you are on PHP 5.6+ or newer. In order
-to access Surface on older versions you will need to do something like
-this instead...**
+to access Surface on older versions of PHP you can use the $surface variable
+instead, which is created in the template scopes for you.**
 
-
-	<?php $surface = Nether\Stash::Get('surface') ?>
 	<html>
 	<head>
 		<title><?php $surface->Show('page-title') ?></title>
