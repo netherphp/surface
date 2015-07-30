@@ -639,7 +639,7 @@ surface-theme-path (web url path).
 	////////////////
 	////////////////
 
-	protected function
+	public function
 	GetRenderScope() {
 	/*//
 	@return array
@@ -661,7 +661,7 @@ surface-theme-path (web url path).
 	////////////////
 	////////////////
 
-	protected function
+	public function
 	GetThemeFile($name,$stack=null) {
 	/*//
 	@argv string Filename
@@ -672,6 +672,13 @@ surface-theme-path (web url path).
 	request. if found it returns the full filepath to that file - if not then
 	it returns boolean false.
 	//*/
+
+		// if we passed a stacked request handle it. else assume the stack
+		// was passed explictly in the stack argument already.
+		if(strpos($name,':') !== false) {
+			$stack = explode(':',$name);
+			$name = array_pop($stack);
+		}
 
 		foreach($this->GetThemeStack($stack) as $theme) {
 			$filename = sprintf(
@@ -692,7 +699,7 @@ surface-theme-path (web url path).
 		return false;
 	}
 
-	protected function
+	public function
 	GetThemeStack($input=null) {
 	/*//
 	@argv string ThemeStackSpecification
