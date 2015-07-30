@@ -163,6 +163,45 @@ extends PHPUnit_Framework_TestCase {
 
 	/** @test */
 	public function
+	TestSetAndGetData() {
+		$surface = new Nether\Surface;
+		$surface->Set('test','<b>boing</b>');
+		$this->AssertTrue($surface->Get('test') === '<b>boing</b>');
+		return;
+	}
+
+	/** @test */
+	public function
+	TestSetAndShowData() {
+		$surface = new Nether\Surface;
+		$surface->Set('test','<b>boing</b>');
+
+		ob_start();
+		$surface->Show('test');
+		$this->AssertTrue(
+			(ob_get_clean() === '&lt;b&gt;boing&lt;/b&gt;'),
+			'by default shows are protected'
+		);
+
+		ob_start();
+		$surface->Show('test',true);
+		$this->AssertTrue(
+			(ob_get_clean() === '&lt;b&gt;boing&lt;/b&gt;'),
+			'explictly shows are protected'
+		);
+
+		ob_start();
+		$surface->Show('test',false);
+		$this->AssertTrue(
+			(ob_get_clean() === '<b>boing</b>'),
+			'explictly shows are unprotected'
+		);
+
+		return;
+	}
+
+	/** @test */
+	public function
 	TestFinalRenderingSolution() {
 		ob_start();
 		// main screen turn on.
