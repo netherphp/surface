@@ -5,6 +5,8 @@
 [![Packagist](https://img.shields.io/packagist/v/netherphp/surface.svg)](https://packagist.org/packages/netherphp/surface)
 [![Packagist](https://img.shields.io/packagist/dt/netherphp/surface.svg)](https://packagist.org/packages/netherphp/surface)
 
+
+
 ## Installing
 
 Require this package in your composer.json. This will also include Object, Stash, and Option.
@@ -51,17 +53,17 @@ which it will attempt to find in the `/opt/website/www/themes/default/area`
 directory. In the main area of the page it dumped the main application output.
 
 **Note: The `$this` will only work if you are on PHP 5.6+ or newer. In order
-to access Surface on older versions you will need to do something like
-this instead...**
+to access Surface on older versions of PHP you can use the $surface variable
+instead, which is created in the template scopes for you.**
 
-
-	<?php $surface = Nether\Stash::Get('surface') ?>
 	<html>
 	<head>
 		<title><?php $surface->Show('page-title') ?></title>
 	...
 
 All my examples are going to assume PHP 5.6 because I can have nice things.
+
+
 
 ## Starting Surface
 
@@ -89,6 +91,8 @@ If you do nothing else, whenever your application ends Surface will
 automatically throw itself together and chuck out the page at the very last
 moment.
 
+
+
 ## Using Surface
 
 At any point in your application you can access that Surface instance
@@ -98,10 +102,13 @@ through the Nether Stash.
 	->Set('name',$user->Name)
 	->Set('email',$user->Email)
 	->ShowArea('forms/user-change-info');
-
+	
 This will make the values of `name` and `email` available to the theme engine
 and then print out the `{$theme}/area/forms/user-change-info.phtml` surface
 area.
+
+At any point inside the template (.phtml) files you can access surface via
+the `$surface` variable. If you are on PHP 5.6+ you can use `$this` instead.
 
 	<form>
 		<div>
@@ -116,4 +123,14 @@ area.
 
 The show method will automatically `htmlentities()` the data for you. If you
 need the data straight up use `echo $this->Get('key')` instead.
+
+
+
+## Testing
+
+This project uses PHPUnit to test.
+
+	composer install
+	phpunit --bootstrap vendor/autoload.php tests
+
 
