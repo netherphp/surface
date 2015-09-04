@@ -221,7 +221,7 @@ surface-theme-path (web url path).
 		$this->Storage['stdout'] = '';
 
 		// pull in default settings.
-		$this->AutoRender = $opt->AutoRender;
+		$this->AutoRender = ((php_sapi_name()==='cli')?(false):($opt->AutoRender));
 		$this->Theme = $opt->Theme;
 		$this->ThemeRoot = $opt->ThemeRoot;
 		$this->Style = $opt->Style;
