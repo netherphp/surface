@@ -10,9 +10,9 @@
 			"role":"developer" }
 	],
 	"require":{
-		"php": ">=5.4.0",
+		"php": ">=7.0.0",
 		"netherphp/ki":"^1.0.0",
-		"netherphp/object":"^1.0.0",
+		"netherphp/object":"^2.0.0",
 		"netherphp/option":"^1.0.0",
 		"netherphp/stash":"^1.0.0"
 	},
