@@ -89,7 +89,7 @@ Ki::Queue('avenue-redirect',function(){
 	$surface = Stash::Get(Option::Get('surface-auto-stash'));
 
 	if($surface && $surface instanceof Surface)
-	$surface->Stop(false);
+	$surface->SetAutoRender(false)->Stop(false);
 
 	return;
 },true);
