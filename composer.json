@@ -14,7 +14,7 @@
 		"netherphp/ki":"^1.0.0",
 		"netherphp/object":"^2.0.0",
 		"netherphp/option":"^1.0.0",
-		"netherphp/stash":"^2.*"
+		"netherphp/stash":"2.*"
 	},
 	"require-dev":{ },
 	"autoload":{
