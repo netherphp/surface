@@ -543,7 +543,7 @@ surface-theme-path (web url path).
 		if(is_array($what))
 		return $this->Get_ByArray($what);
 
-		return false;
+		return NULL;
 	}
 
 	protected function
@@ -557,7 +557,7 @@ surface-theme-path (web url path).
 		if(array_key_exists($key,$this->Storage))
 		return $this->Storage[$key];
 
-		return false;
+		return NULL;
 	}
 
 	protected function
