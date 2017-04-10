@@ -2,13 +2,13 @@
 
 namespace Nether\Surface\Test;
 use \Nether;
-use \PHPUnit_Framework_TestCase;
+use \PHPUnit as PHPUnit;
 
 ////////
 ////////
 
 class SurfaceGeneralTest
-extends PHPUnit_Framework_TestCase {
+extends PHPUnit\Framework\TestCase {
 
 	/** @before */
 	public function
@@ -224,6 +224,19 @@ extends PHPUnit_Framework_TestCase {
 		$content = $surface->Render(true);
 
 		$this->AssertTrue($content === 'output: this is the index page');
+		return;
+	}
+
+	/** @test */
+	public function
+	TestInvokeSyntax() {
+
+		$Surface = new Nether\Surface;
+
+		$this->AssertTrue($Surface('Null') === NULL);
+		$this->AssertTrue($Surface('Test','Value') instanceof Nether\Surface);
+		$this->AssertTrue($Surface('Test') === 'Value');
+
 		return;
 	}
 
