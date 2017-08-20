@@ -209,7 +209,7 @@ surface-theme-path (web url path).
 	handle object construction.
 	//*/
 
-		$opt = new Nether\Object($opt,[
+		$opt = new Nether\Object\Mapped($opt,[
 			'Theme'       => Option::Get('surface-theme'),
 			'ThemeRoot'   => Option::Get('surface-theme-root'),
 			'Style'       => Option::Get('surface-theme-style'),
