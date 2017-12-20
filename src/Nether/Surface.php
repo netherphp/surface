@@ -345,6 +345,9 @@ surface-theme-path (web url path).
 		if(!($template = $this->GetThemeFile('design.phtml')))
 		throw new Exception("error opening {$template} for {$this->Theme}");
 
+		// notification of beginning a render process.
+		Nether\Ki::Flow('surface-render-init',[$this]);
+
 		// run through the framework settings to generate some common meta data
 		// like page title if the data hasn't already been defined.
 		$this->PrepareTitle();
