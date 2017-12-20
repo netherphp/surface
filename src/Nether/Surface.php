@@ -346,7 +346,7 @@ surface-theme-path (web url path).
 		throw new Exception("error opening {$template} for {$this->Theme}");
 
 		// notification of beginning a render process.
-		Nether\Ki::Flow('surface-render-init',[$this]);
+		Nether\Ki::Flow('surface-render-init',[$this],FALSE);
 
 		// run through the framework settings to generate some common meta data
 		// like page title if the data hasn't already been defined.
@@ -502,6 +502,9 @@ surface-theme-path (web url path).
 
 		if(!$filename)
 		throw new Exception("no surface area matching {$which} could be located.");
+
+		// notification of beginning a render process.
+		Nether\Ki::Flow('surface-render-init',[$this],FALSE);
 
 		////////
 		////////
