@@ -533,6 +533,19 @@ surface-theme-path (web url path).
 	// data storage api ////////////////////////////////////////////////////////
 
 	public function
+	Define($Key,$Val) {
+	/*//
+	@date 2017-12-20
+	add data in storage only if it does not yet exist.
+	//*/
+
+		if(!array_key_exists($Key,$this->Storage))
+		$this->Storage[$Key] = $Val;
+
+		return $this;
+	}
+
+	public function
 	Get($what) {
 	/*//
 	@argv string Key
