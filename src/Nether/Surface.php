@@ -475,7 +475,7 @@ surface-theme-path (web url path).
 	// new area api ////////////////////////////////////////////////////////////
 
 	public function
-	GetArea($which) {
+	GetArea(String $Which) {
 	/*//
 	@argv string AreaFileRequest
 	@return string
@@ -492,16 +492,16 @@ surface-theme-path (web url path).
 	files were found to handle the surface area.
 	//*/
 
-		$stack = explode(':',$which);
-		$area = array_pop($stack);
+		$Stack = explode(':',$Which);
+		$Area = array_pop($Stack);
 
-		$filename = $this->GetThemeFile(
-			"area/{$area}.phtml",
-			$stack
+		$Filename = $this->GetThemeFile(
+			"area/{$Area}.phtml",
+			$Stack
 		);
 
-		if(!$filename)
-		throw new Exception("no surface area matching {$which} could be located.");
+		if(!$Filename)
+		throw new Exception("no surface area matching {$Which} could be located.");
 
 		// notification of beginning a render process.
 		Nether\Ki::Flow('surface-render-init',[$this],FALSE);
@@ -510,22 +510,27 @@ surface-theme-path (web url path).
 		////////
 
 		ob_start();
-		call_user_func(function($__filename,$__scope){
-			extract($__scope); unset($__scope);
-			require($__filename);
-		},$filename,$this->GetRenderScope());
+		call_user_func(
+			function($__Filename,$__Scope){
+				extract($__Scope); unset($__Scope);
+				require($__Filename);
+				return;
+			},
+			$Filename,
+			$this->GetRenderScope($Area)
+		);
 		return ob_get_clean();
 	}
 
 	public function
-	ShowArea($which) {
+	ShowArea(String $Which) {
 	/*//
 	@argv string AreaFileRequest
 	@return self
 	wraps the GetArea method for instant printign.
 	//*/
 
-		echo $this->GetArea($which);
+		echo $this->GetArea($Which);
 		return $this;
 	}
 
@@ -659,22 +664,30 @@ surface-theme-path (web url path).
 	////////////////
 
 	public function
-	GetRenderScope() {
+	GetRenderScope($Area=NULL):
+	Array {
 	/*//
-	@return array
 	allow other libraries to attach data to the render system to create a
 	variable to be accessable within theme templates. the scope is an
 	associative array passed around by reference. in the theme file it will
-	extract the array into variables.
+	extract the array into variables. can be given specific area files to
+	scope for.
 	//*/
 
-		$scope = ['surface'=>$this];
+		$Scope = [ 'surface' => $this ];
+
 		Ki::Flow(
-			'surface-render-scope',
-			[&$scope]
+			"surface-render-scope",
+			[&$Scope]
 		);
 
-		return $scope;
+		if($Area !== NULL)
+		Ki::Flow(
+			"surface-render-scope-{$Area}",
+			[&$Scope]
+		);
+
+		return $Scope;
 	}
 
 	////////////////
@@ -789,17 +802,14 @@ surface-theme-path (web url path).
 	// deprecated / backwards compat crap /////////////////////////////////////
 
 	public function
-	Area($input,$return=false) {
+	Area(String $Input, Bool $Return=FALSE) {
 	/*//
-	@argv string Area, bool ShouldReturn default false
-	@return string or null
-	@deprecated
 	this function exists for backwards compat and is basically a binary alias
 	to the GetArea and ShowArea methods.
 	//*/
 
-		if(!$return) return $this->ShowArea($input);
-		else return $this->GetArea($input);
+		if(!$Return) return $this->ShowArea($Input);
+		else return $this->GetArea($Input);
 	}
 
 }
