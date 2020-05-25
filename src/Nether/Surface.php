@@ -84,12 +84,13 @@ Ki::Queue('avenue-redirect',function(){
 	// if a redirect was requested shut down the automatic surface instance and
 	// throw away whatever it already collected.
 
-	if(!class_exists('Nether\Stash')) return;
+	if(!class_exists('Nether\Stash'))
+	return;
 
-	$surface = Stash::Get(Option::Get('surface-auto-stash'));
+	$Surface = Stash::Get(Option::Get('surface-auto-stash'));
 
-	if($surface && $surface instanceof Surface)
-	$surface->SetAutoRender(false)->Stop(false);
+	if($Surface && $Surface instanceof Surface)
+	$Surface->SetAutoRender(FALSE)->Stop(FALSE);
 
 	return;
 },true);
@@ -117,21 +118,24 @@ theme directory via surface-theme-root (filesystem path) and
 surface-theme-path (web url path).
 //*/
 
-	protected $Started = false;
+	protected
+	$Started = FALSE;
 	/*//
 	@type boolean
 	a sentinel marking if this object has begun capturing a level of stdout
 	or not.
 	//*/
 
-	protected $Rendered = false;
+	protected
+	$Rendered = FALSE;
 	/*//
 	@type boolean
 	marks if this object has rendered before. this is mainly to prevent the
 	destruct from trying again if we had manually called Render prior.
 	//*/
 
-	protected $Storage = [];
+	protected
+	$Storage = [];
 	/*//
 	@type array
 	where this surface instance stores the data to be used for rendering.
@@ -140,7 +144,8 @@ surface-theme-path (web url path).
 	////////////////////////
 	////////////////////////
 
-	protected $AutoRender = false;
+	protected
+	$AutoRender = FALSE;
 	/*//
 	@type bool
 	if this object should automatically render when it is destroyed. this value
@@ -148,15 +153,25 @@ surface-theme-path (web url path).
 	//*/
 
 	public function
-	GetAutoRender() { return $this->AutoRender; }
+	GetAutoRender():
+	Bool {
+
+		return $this->AutoRender;
+	}
 
 	public function
-	SetAutoRender($b) { $this->AutoRender = (bool)$b; return $this; }
+	SetAutoRender(Bool $Val):
+	self {
+
+		$this->AutoRender = $Val;
+		return $this;
+	}
 
 	////////
 	////////
 
-	protected $Style;
+	protected
+	$Style = '';
 	/*//
 	@type string
 	the name of the subtheme for the theme to use if it wants. the library
@@ -165,51 +180,79 @@ surface-theme-path (web url path).
 	//*/
 
 	public function
-	GetStyle() { return $this->Style; }
+	GetStyle():
+	String {
+
+		return $this->Style;
+	}
 
 	public function
-	SetStyle($style) { $this->Style = $style; return $this; }
+	SetStyle(String $Val):
+	self {
+
+		$this->Style = $Val;
+		return $this;
+	}
 
 	////////
 	////////
 
-	protected $Theme;
+	protected
+	$Theme = '';
 	/*//
 	@type string
 	the name of the theme to render in.
 	//*/
 
 	public function
-	GetTheme() { return $this->Theme; }
+	GetTheme():
+	String {
+
+		return $this->Theme;
+	}
 
 	public function
-	SetTheme($theme) { $this->Theme = $theme; return $this; }
+	SetTheme(String $Val):
+	self {
+		$this->Theme = $Val;
+		return $this;
+	}
 
 	////////
 	////////
 
-	protected $ThemeRoot;
+	protected
+	$ThemeRoot = '';
 	/*//
 	@type string
 	the directory all the themes are installed.
 	//*/
 
 	public function
-	GetThemeRoot() { return $this->ThemeRoot; }
+	GetThemeRoot():
+	String {
+
+		return $this->ThemeRoot;
+	}
 
 	public function
-	SetThemeRoot($path) { $this->ThemeRoot = $path; return $this; }
+	SetThemeRoot(String $Val):
+	self {
+
+		$this->ThemeRoot = $Val;
+		return $this;
+	}
 
 	///////////////////////////////////////////////////////////////////////////
 	// magic object behaviour methods /////////////////////////////////////////
 
 	public function
-	__Construct($opt=null) {
+	__Construct(?Array $Opt=NULL) {
 	/*//
 	handle object construction.
 	//*/
 
-		$opt = new Nether\Object\Mapped($opt,[
+		$Opt = new Nether\Object\Mapped($Opt,[
 			'Theme'       => Option::Get('surface-theme'),
 			'ThemeRoot'   => Option::Get('surface-theme-root'),
 			'Style'       => Option::Get('surface-theme-style'),
@@ -218,23 +261,27 @@ surface-theme-path (web url path).
 			'AutoRender'  => Option::Get('surface-auto-render')
 		]);
 
+		$Env = php_sapi_name();
 		$this->Storage['stdout'] = '';
 
 		// pull in default settings.
-		$this->AutoRender = ((php_sapi_name()==='cli')?(false):($opt->AutoRender));
-		$this->Theme = $opt->Theme;
-		$this->ThemeRoot = $opt->ThemeRoot;
-		$this->Style = $opt->Style;
+
+		$this->AutoRender = (($Env === 'cli')?(FALSE):($Opt->AutoRender));
+		$this->Theme = $Opt->Theme;
+		$this->ThemeRoot = $Opt->ThemeRoot;
+		$this->Style = $Opt->Style;
 
 		// if auto stashing is enabled.
-		if(is_string($opt->AutoStash) && class_exists('Nether\Stash')) {
-			if(!Stash::Has($opt->AutoStash))
-			Stash::Set($opt->AutoStash,$this);
-		}
+
+		if(is_string($Opt->AutoStash))
+		if(class_exists('Nether\Stash'))
+		if(!Stash::Has($Opt->AutoStash))
+		Stash::Set($Opt->AutoStash,$this);
 
 		// begin capture if autocapture is enabled and this is not the
 		// command line interface.
-		if($opt->AutoCapture && php_sapi_name() !== 'cli')
+
+		if($Opt->AutoCapture && $Env !== 'cli')
 		$this->Start();
 
 		return;
@@ -260,13 +307,14 @@ surface-theme-path (web url path).
 	is provided then it will get the value. if two, it will set it.
 	//*/
 
-		$argv = func_get_args();
-		switch(count($argv)) {
+		$Argv = func_get_args();
+
+		switch(count($Argv)) {
 			case 1: {
-				return $this->Get($argv[0]);
+				return $this->Get(...$Argv);
 			}
 			case 2: {
-				$this->Set($argv[0],$argv[1]);
+				$this->Set(...$Argv);
 				return $this;
 			}
 		}
@@ -361,7 +409,7 @@ surface-theme-path (web url path).
 		call_user_func(function($__filename,$__scope){
 			extract($__scope); unset($__scope);
 			require($__filename);
-		},$template,$this->GetRenderScope());
+		},$template,$this->GetRenderScope('design'));
 
 		if(!$return) {
 			// print it out if we didn't want it back.
