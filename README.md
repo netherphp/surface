@@ -2,8 +2,8 @@
 
 [![nether.io](https://img.shields.io/badge/Nether-Surface-C661D2.svg)](http://github.com/netherphp/surface)
 [![Build Status](https://github.com/netherphp/surface/workflows/Unit%20Tests/badge.svg)](https://github.com/netherphp/surface/actions?query=workflow%3A%22Unit+Tests%22)
-[![Packagist](https://img.shields.io/Packagist/v/netherphp/surface.svg)](https://packagist.org/packages/netherphp/surface)
-[![Packagist](https://img.shields.io/Packagist/dt/netherphp/surface.svg)](https://packagist.org/packages/netherphp/surface)
+[![Packagist](https://img.shields.io/packagist/v/netherphp/surface.svg)](https://packagist.org/packages/netherphp/surface)
+[![Packagist](https://img.shields.io/packagist/dt/netherphp/surface.svg)](https://packagist.org/packages/netherphp/surface)
 
 
 
