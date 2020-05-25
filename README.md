@@ -1,7 +1,7 @@
 # Nether Surface
 
 [![nether.io](https://img.shields.io/badge/nether-surface-C661D2.svg)](http://nether.io/)
-[![Build Status](https://travis-ci.org/netherphp/surface.svg)](https://travis-ci.org/netherphp/surface)
+[![Build Status](https://github.com/netherphp/surface/workflows/Unit%20Tests/badge.svg)](https://github.com/netherphp/surface/actions?query=workflow%3A%22Unit+Tests%22)
 [![Packagist](https://img.shields.io/packagist/v/netherphp/surface.svg)](https://packagist.org/packages/netherphp/surface)
 [![Packagist](https://img.shields.io/packagist/dt/netherphp/surface.svg)](https://packagist.org/packages/netherphp/surface)
 
@@ -102,7 +102,7 @@ through the Nether Stash.
 	->Set('name',$user->Name)
 	->Set('email',$user->Email)
 	->ShowArea('forms/user-change-info');
-	
+
 This will make the values of `name` and `email` available to the theme engine
 and then print out the `{$theme}/area/forms/user-change-info.phtml` surface
 area.
