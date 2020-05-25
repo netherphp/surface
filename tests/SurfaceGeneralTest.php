@@ -25,8 +25,10 @@ extends PHPUnit\Framework\TestCase {
 			'nether-web-path'      => '/',
 			'surface-theme'        => 'testing',
 			'surface-theme-stack'  => ['common'],
-			'surface-auto-capture' => false,
-			'surface-auto-render'  => false
+			'surface-auto-capture' => FALSE,
+			'surface-auto-render'  => FALSE,
+			'App.Name'             => 'App Name',
+			'app-name'             => 'Old Name'
 		]);
 
 		return;
@@ -236,6 +238,94 @@ extends PHPUnit\Framework\TestCase {
 		$this->AssertTrue($Surface('Null') === NULL);
 		$this->AssertTrue($Surface('Test','Value') instanceof Nether\Surface);
 		$this->AssertTrue($Surface('Test') === 'Value');
+
+		return;
+	}
+
+	/** @test */
+	public function
+	TestPageTitleDefault() {
+
+		ob_start();
+		$Surface = new Nether\Surface;
+		$Surface->Start();
+		$Surface->Render();
+		ob_get_clean();
+
+		$this->AssertEquals(
+			'App Name',
+			$Surface->Get('Page.Title')
+		);
+
+		return;
+	}
+
+	/** @test */
+	public function
+	TestPageTitleDeprecated() {
+
+		unset(Nether\Option::$Storage['App.Name']);
+
+		ob_start();
+		$Surface = new Nether\Surface;
+		$Surface->Start();
+		$Surface->Render();
+		ob_get_clean();
+
+		$this->AssertEquals(
+			'Old Name',
+			$Surface->Get('Page.Title')
+		);
+
+		$this->AssertEquals(
+			'Old Name',
+			$Surface->Get('page-title')
+		);
+
+		return;
+	}
+
+	/** @test */
+	public function
+	TestPageTitleSet() {
+
+		ob_start();
+		$Surface = new Nether\Surface;
+		$Surface->Start();
+		$Surface->Set('Page.Title','Page Title');
+		$Surface->Render();
+		ob_get_clean();
+
+		$this->AssertEquals(
+			'Page Title - App Name',
+			$Surface->Get('Page.Title')
+		);
+
+		return;
+	}
+
+	/** @test */
+	public function
+	TestPageTitleSetDeprecated() {
+
+		unset(Nether\Option::$Storage['App.Name']);
+
+		ob_start();
+		$Surface = new Nether\Surface;
+		$Surface->Start();
+		$Surface->Set('Page.Title','Page Title');
+		$Surface->Render();
+		ob_get_clean();
+
+		$this->AssertEquals(
+			'Page Title - Old Name',
+			$Surface->Get('Page.Title')
+		);
+
+		$this->AssertEquals(
+			'Page Title - Old Name',
+			$Surface->Get('page-title')
+		);
 
 		return;
 	}

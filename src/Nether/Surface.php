@@ -53,7 +53,7 @@ Option::Define([
 	allowing something like a user selected subtheme, or whatever.
 	//*/
 
-	'surface-title-brand' => true,
+	'surface-title-brand' => TRUE,
 	/*//
 	@option surface-title-brand boolean
 	if true it will attempt to brand your page-title value with data from
@@ -329,7 +329,8 @@ surface-theme-path (web url path).
 	compiling the resulting page from the configured template. //*/
 
 	public function
-	Start() {
+	Start():
+	Bool {
 	/*//
 	@return boolean
 	begin capturing stdout if this object has not already done so. returns if
@@ -344,7 +345,8 @@ surface-theme-path (web url path).
 	}
 
 	public function
-	Stop($keep=true) {
+	Stop(Bool $Keep=TRUE):
+	?String {
 	/*//
 	@return mixed
 	@argv boolean KeepBuffer default true
@@ -353,51 +355,63 @@ surface-theme-path (web url path).
 	//*/
 
 		// nothing if we haven't started.
-		if(!$this->Started) return false;
+
+		if(!$this->Started)
+		return false;
 
 		// else fetch the buffer.
-		$this->Started = false;
-		$stdout = ob_get_clean();
+
+		$this->Started = NULL;
+		$Output = ob_get_clean();
 
 		// allow things to filter this content.
-		Ki::Flow('surface-stdout',[&$stdout]);
+
+		Ki::Flow('surface-stdout',[&$Output]);
 
 		// append it if we elected to keep it.
-		if($keep) {
-			$this->Storage['stdout'] .= $stdout;
-			return true;
+
+		if($Keep) {
+			$this->Storage['stdout'] .= $Output;
+			return NULL;
 		}
 
 		// else return it and forget it.
-		return $stdout;
+		return $Output;
 	}
 
 	public function
-	Render($return=false) {
+	Render(Bool $Return=FALSE):
+	?String {
 	/*//
 	@return boolean
 	begin the rendering operation using the full page template.
 	//*/
 
 		// flag this as called.
-		$this->Rendered = true;
+
+		$this->Rendered = TRUE;
 
 		// fetch whatever is still hanging on in the buffer.
-		$this->Stop(true);
+
+		$this->Stop(TRUE);
 
 		// check if we had decided on a theme yet.
+
 		if(!$this->Theme)
 		$this->Theme = Nether\Option::Get('surface-theme');
 
 		// determine the template file to use.
-		if(!($template = $this->GetThemeFile('design.phtml')))
-		throw new Exception("error opening {$template} for {$this->Theme}");
+
+		if(!($Template = $this->GetThemeFile('design.phtml')))
+		throw new Exception("error opening {$Template} for {$this->Theme}");
 
 		// notification of beginning a render process.
+
 		Nether\Ki::Flow('surface-render-init',[$this],FALSE);
 
 		// run through the framework settings to generate some common meta data
 		// like page title if the data hasn't already been defined.
+
 		$this->PrepareTitle();
 		$this->PrepareKeywords();
 		$this->PrepareDescription();
@@ -406,19 +420,25 @@ surface-theme-path (web url path).
 		////////
 
 		ob_start();
-		call_user_func(function($__filename,$__scope){
-			extract($__scope); unset($__scope);
-			require($__filename);
-		},$template,$this->GetRenderScope('design'));
 
-		if(!$return) {
+		call_user_func(
+			function($__Filename,$__Scope){
+				extract($__Scope); unset($__Scope);
+				require($__Filename);
+				return;
+			},
+			$Template,
+			$this->GetRenderScope('design')
+		);
+
+		if(!$Return) {
 			// print it out if we didn't want it back.
 			echo ob_get_clean();
-			return;
-		} else {
-			// hand it back if we wanted it.
-			return ob_get_clean();
+			return NULL;
 		}
+
+		// hand it back if we wanted it.
+		return ob_get_clean();
 	}
 
 	///////////////////////////////////////////////////////////////////////////
@@ -428,64 +448,93 @@ surface-theme-path (web url path).
 	common meta data that is useful for webpages. //*/
 
 	protected function
-	PrepareTitle() {
+	PrepareTitle():
+	Void {
 	/*//
 	generate or modify a page-title value.
 	//*/
 
-		if($this->Get('page-title'))
-		$this->PrepareTitle_FromExisting();
+		$Title = NULL;
 
-		else
-		$this->PrepareTitle_FromNothing();
+		if(!Option::Get('surface-title-brand'))
+		return;
+
+		////////
+
+		$Title = $this->Get('Page.Title') ?? $this->Get('page-title');
+		if($Title) {
+			$this->PrepareTitle_FromValue($Title);
+			return;
+		}
+
+		$Title = Option::Get('App.Name') ?? Option::Get('app-name');
+		if($Title) {
+			$this->PrepareTitle_FromNothing();
+			return;
+		}
 
 		return;
 	}
 
 	protected function
-	PrepareTitle_FromNothing() {
+	PrepareTitle_FromValue(String $Input):
+	Void {
+
+		$Brand = '';
+		$Final = '';
+
+		$Brand = Option::Get('App.Name') ?? Option::Get('app-name');
+
+		if(!$Brand)
+		return;
+
+		$Final = "{$Input} - {$Brand}";
+
+		// modify the original value then.
+
+		$this
+		->Set('Page.Title',$Final)
+		->Set('page-title',$Final);
+
+		return;
+	}
+
+	protected function
+	PrepareTitle_FromNothing():
+	Void {
 	/*//
 	and from the ashes will arise a new page title. if our view or app has
 	not yet described a page title then attempt to generate one if we have
 	other data like app name and description set.
 	//*/
 
-		// no name, no branding.
-		if(!Option::Get('surface-title-brand') || !Option::Get('app-name'))
-		return $this;
+		$Brand = '';
+		$Desc = '';
+		$Final = '';
 
-		// if we have a description lets use it too.
-		if(Option::Get('app-short-desc'))
-		$this->Set('page-title',sprintf(
-			'%s - %s',
-			Option::Get('app-name'),
-			Option::Get('app-short-desc')
-		));
+		$Brand = Option::Get('App.Name') ?? Option::Get('app-name');
+		$Desc = Option::Get('App.Desc.Short') ?? Option::Get('app-short-desc');
 
-		// else just use the app name.
-		else
-		$this->Set('page-title',Option::Get('app-name'));
+		if(!$Brand && !$Desc)
+		return;
 
-		return $this;
-	}
+		// generate a final string.
 
-	protected function
-	PrepareTitle_FromExisting() {
-	/*//
-	append the site name if enabled and defined to the page title that
-	was generated at some point by the app.
-	//*/
+		if($Brand && $Desc)
+		$Final = "{$Brand} - {$Desc}";
+		elseif($Brand)
+		$Final = $Brand;
 
-		if(!Option::Get('surface-title-brand') || !Option::Get('app-name'))
-		return $this;
+		if(!$Final)
+		return;
 
-		$this->Set('page-title',sprintf(
-			'%s - %s',
-			$this->Get('page-title'),
-			Option::Get('app-name')
-		));
+		// modify the original value then.
 
-		return $this;
+		$this
+		->Set('Page.Title',$Final)
+		->Set('page-title',$Final);
+
+		return;
 	}
 
 	protected function
@@ -647,6 +696,16 @@ surface-theme-path (web url path).
 		$return[$key] = $this->Get_ByString($key);
 
 		return $return;
+	}
+
+	public function
+	Has(String $Key):
+	Bool {
+	/*//
+	@date 2020-05-25
+	//*/
+
+		return array_key_exists($Key,$this->Storage);
 	}
 
 	public function
