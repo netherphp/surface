@@ -17,6 +17,7 @@
 		"netherphp/stash":"~2.0"
 	},
 	"require-dev":{
+		"phpunit/phpunit": "*"
 	},
 	"autoload":{
 		"psr-0": {
