@@ -11,14 +11,7 @@
 
 Require this package in your composer.json. This will also include Object, Stash, and Option.
 
-	require { "netherphp/surface": "^1.1.0" }
-
-Then install it or update into it.
-
-	$ composer install --no-dev
-	$ composer update --no-dev
-
-
+	$ composer require netherphp/surface
 
 ## Creating a Surface Theme
 
@@ -60,9 +53,6 @@ instead, which is created in the template scopes for you.**
 	<head>
 		<title><?php $surface->Show('page-title') ?></title>
 	...
-
-All my examples are going to assume PHP 5.6 because I can have nice things.
-
 
 
 ## Starting Surface
@@ -123,14 +113,3 @@ the `$surface` variable. If you are on PHP 5.6+ you can use `$this` instead.
 
 The show method will automatically `htmlentities()` the data for you. If you
 need the data straight up use `echo $this->Get('key')` instead.
-
-
-
-## Testing
-
-This project uses PHPUnit to test.
-
-	composer install
-	phpunit --bootstrap vendor/autoload.php tests
-
-
