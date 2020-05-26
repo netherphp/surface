@@ -332,4 +332,66 @@ extends PHPUnit\Framework\TestCase {
 		return;
 	}
 
+	/** @test */
+	public function
+	TestScopeVarsGlobal() {
+
+		ob_start();
+		$Surface = new Nether\Surface;
+		$Surface->Start();
+		$Surface->Push(['Test1'=>'Banana For Scale']);
+		$Surface->Area('scope');
+		$Surface->Render();
+		$Result = ob_get_clean();
+
+		$this->AssertEquals(
+			$Result,
+			'output: Test1: Banana For Scale, Test2: -not-set-'
+		);
+
+		return;
+	}
+
+	/** @test */
+	public function
+	TestScopeVarsGlobalWithOtherAreaLocals() {
+
+		ob_start();
+		$Surface = new Nether\Surface;
+		$Surface->Start();
+		$Surface->Push(['Test1'=>'Banana For Scale']);
+		$Surface->Push(['Test2'=>'Scale For Bananas'],'some-other-page');
+		$Surface->Area('scope');
+		$Surface->Render();
+		$Result = ob_get_clean();
+
+		$this->AssertEquals(
+			$Result,
+			'output: Test1: Banana For Scale, Test2: -not-set-'
+		);
+
+		return;
+	}
+
+	/** @test */
+	public function
+	TestScopeVarsGlobalWithCurrentAreaLocals() {
+
+		ob_start();
+		$Surface = new Nether\Surface;
+		$Surface->Start();
+		$Surface->Push(['Test1'=>'Banana For Scale']);
+		$Surface->Push(['Test2'=>'Scale For Bananas'],'scope');
+		$Surface->Area('scope');
+		$Surface->Render();
+		$Result = ob_get_clean();
+
+		$this->AssertEquals(
+			$Result,
+			'output: Test1: Banana For Scale, Test2: Scale For Bananas'
+		);
+
+		return;
+	}
+
 }

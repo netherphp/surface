@@ -776,6 +776,39 @@ surface-theme-path (web url path).
 		return $this;
 	}
 
+	public function
+	Push(Array $Items, ?String $Area=NULL):
+	self {
+	/*//
+	@date 2020-05-24
+	pushes an array of items into the surface scope system to make variables
+	inside of area files automatically. the second argument will restrict
+	the created variables to the specified area file.
+	//*/
+
+		$Event = "surface-render-scope";
+
+		if($Area !== NULL)
+		$Event = "surface-render-scope-{$Area}";
+
+		Nether\Ki::Queue(
+			$Event,
+			function(Array &$Scope) use ($Items):
+			Void {
+				$Key = NULL;
+				$Val = NULL;
+
+				foreach($Items as $Key => $Val)
+				$Scope[$Key] = $Val;
+
+				return;
+			},
+			TRUE
+		);
+
+		return $this;
+	}
+
 	////////////////
 	////////////////
 
