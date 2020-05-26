@@ -28,7 +28,9 @@ extends PHPUnit\Framework\TestCase {
 			'surface-auto-capture' => FALSE,
 			'surface-auto-render'  => FALSE,
 			'App.Name'             => 'App Name',
-			'app-name'             => 'Old Name'
+			'app-name'             => 'Old Name',
+			'App.Keywords'         => 'App, Keywords',
+			'app-keywords'         => 'Old, Keywords'
 		]);
 
 		return;
@@ -108,17 +110,17 @@ extends PHPUnit\Framework\TestCase {
 	/** @test */
 	public function
 	TestThemeFileFinding() {
-		$surface = new Nether\Surface;
+		$Surface = new Nether\Surface;
 
-		$filename = $surface->GetThemeFile('design.nope');
+		$Filename = $Surface->GetThemeFile('design.nope');
 		$this->AssertTrue(
-			($filename === false),
+			($Filename === NULL),
 			'that we failed to find a non-existant file'
 		);
 
-		$filename = $surface->GetThemeFile('design.phtml');
+		$Filename = $Surface->GetThemeFile('design.phtml');
 		$this->AssertTrue(
-			($filename === "{$surface->GetThemeRoot()}/testing/design.phtml"),
+			($Filename === "{$Surface->GetThemeRoot()}/testing/design.phtml"),
 			'that we found an existing file'
 		);
 
@@ -128,17 +130,17 @@ extends PHPUnit\Framework\TestCase {
 	/** @test */
 	public function
 	TestStackedThemeFileFinding() {
-		$surface = new Nether\Surface;
+		$Surface = new Nether\Surface;
 
-		$filename = $surface->GetThemeFile('testing-also:design.nope');
+		$Filename = $Surface->GetThemeFile('testing-also:design.nope');
 		$this->AssertTrue(
-			($filename === false),
+			($Filename === NULL),
 			'that we failed to find a non-existant file'
 		);
 
-		$filename = $surface->GetThemeFile('testing-also:design.phtml');
+		$Filename = $Surface->GetThemeFile('testing-also:design.phtml');
 		$this->AssertTrue(
-			($filename === "{$surface->GetThemeRoot()}/testing-also/design.phtml"),
+			($Filename === "{$Surface->GetThemeRoot()}/testing-also/design.phtml"),
 			"we found an existing file via stacked name"
 		);
 

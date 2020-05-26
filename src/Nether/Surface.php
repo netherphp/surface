@@ -538,32 +538,41 @@ surface-theme-path (web url path).
 	}
 
 	protected function
-	PrepareKeywords() {
+	PrepareKeywords():
+	Void {
 	/*//
 	generate a page-keywords if one has not yet been defined.
 	//*/
 
-		// if the app has already defined keywords then do not overwite them.
-		if($this->Get('page-keywords'))
-		return $this;
+		$Keywords = $this->Get('Page.Keywords') ?? $this->Get('page-keywords');
 
-		// use the app keywords if defined.
-		if(Option::Get('app-keywords'))
-		$this->Set('page-keywords',Option::Get('app-keywords'));
+		if(!$Keywords)
+		$Keywords = Option::Get('App.Keywords') ?? Option::Get('App.Keywords');
 
-		return $this;
+		if(!$this->Has('Page.Keywords'))
+		$this->Set('Page.Keywords',$Keywords);
+
+		if(!$this->Has('page-keywords'))
+		$this->Set('page-keywords',$Keywords);
+
+		return;
 	}
 
 	protected function
-	PrepareDescription() {
+	PrepareDescription():
+	Void {
 	/*//
 	generate a page-desc if one has not yet been defined.
 	//*/
 
-		// if no description is set, attempt to get one from the application
-		// configuration.
-		if(!$this->Get('page-desc') && Option::Get('app-long-desc'))
-		$this->Set('page-desc',Option::Get('app-long-desc'));
+		$Desc = $this->Get('Page.Desc') ?? Option::Get('app-long-desc');
+		if(!$Desc) return;
+
+		if(!$this->Has('Page.Desc'))
+		$this->Set('Page.Desc',$Desc);
+
+		if(!$this->Has('page-desc'))
+		$this->Set('page-desc',$Desc);
 
 		return;
 	}
@@ -572,10 +581,9 @@ surface-theme-path (web url path).
 	// new area api ////////////////////////////////////////////////////////////
 
 	public function
-	GetArea(String $Which) {
+	GetArea(String $Which):
+	String {
 	/*//
-	@argv string AreaFileRequest
-	@return string
 	attempt to fetch the result of the specified area file. it takes a string
 	to the requested area relative to the current theme. it can also be
 	prefixed with a theme stack with colons to customise which theme this
@@ -620,10 +628,9 @@ surface-theme-path (web url path).
 	}
 
 	public function
-	ShowArea(String $Which) {
+	ShowArea(String $Which):
+	self {
 	/*//
-	@argv string AreaFileRequest
-	@return self
 	wraps the GetArea method for instant printign.
 	//*/
 
@@ -635,7 +642,8 @@ surface-theme-path (web url path).
 	// data storage api ////////////////////////////////////////////////////////
 
 	public function
-	Define($Key,$Val) {
+	Define($Key,$Val):
+	self {
 	/*//
 	@date 2017-12-20
 	add data in storage only if it does not yet exist.
@@ -648,7 +656,7 @@ surface-theme-path (web url path).
 	}
 
 	public function
-	Get($what) {
+	Get($What) {
 	/*//
 	@argv string Key
 	@argv array(string Key, ...)
@@ -658,44 +666,44 @@ surface-theme-path (web url path).
 	values associated with them will be returned instead.
 	//*/
 
-		if(is_string($what))
-		return $this->Get_ByString($what);
+		if(is_string($What))
+		return $this->Get_ByString($What);
 
-		if(is_array($what))
-		return $this->Get_ByArray($what);
+		if(is_array($What))
+		return $this->Get_ByArray($What);
 
 		return NULL;
 	}
 
 	protected function
-	Get_ByString($key) {
+	Get_ByString(String $Key) {
 	/*//
 	@argv string Key
 	@return mixed
 	return the data stored in the specified key.
 	//*/
 
-		if(array_key_exists($key,$this->Storage))
-		return $this->Storage[$key];
+		if(array_key_exists($Key,$this->Storage))
+		return $this->Storage[$Key];
 
 		return NULL;
 	}
 
 	protected function
-	Get_ByArray($list) {
+	Get_ByArray(Array $List):
+	Array {
 	/*//
-	@argv array KeyList
-	@return array
 	given an array of keys to lookup, return an array of data
 	indexed by those same keys.
 	//*/
 
-		$return = [];
+		$Return = [];
+		$Key = NULL;
 
-		foreach($list as $key)
-		$return[$key] = $this->Get_ByString($key);
+		foreach($List as $Key)
+		$Return[$Key] = $this->Get_ByString($Key);
 
-		return $return;
+		return $Return;
 	}
 
 	public function
@@ -709,59 +717,60 @@ surface-theme-path (web url path).
 	}
 
 	public function
-	Set($what,$value=null) {
+	Set($What, $Value=NULL):
+	self {
 	/*//
 	@argv string Key, Mixed Value
 	@argv array(string Key => mixed Value, ...)
-	@return self
 	sets values in the surface storage. can take a string key and value, or an
 	associative array of multiple keys and values to set.
 	//*/
 
-		if(is_string($what))
-		return $this->Set_ByString($what,$value);
+		if(is_string($What))
+		return $this->Set_ByString($What,$Value);
 
-		if(is_array($what))
-		return $this->Set_ByArray($what);
+		if(is_array($What))
+		return $this->Set_ByArray($What);
 
 		return $this;
 	}
 
 	protected function
-	Set_ByString($key,$val) {
+	Set_ByString($Key,$Val):
+	self {
 	/*//
 	@argv string Key, mixed Val
 	@return self
 	//*/
 
-		$this->Storage[$key] = $val;
+		$this->Storage[$Key] = $Val;
 		return $this;
 	}
 
 	protected function
-	Set_ByArray($data) {
+	Set_ByArray(Array $Data):
+	self {
 	/*//
 	@argv array Dataset
 	@return self
 	//*/
 
-		foreach($data as $key => $val)
-		$this->Set_ByString($key,$val);
+		foreach($Data as $Key => $Val)
+		$this->Set_ByString($Key,$Val);
 
 		return $this;
 	}
 
 	public function
-	Show($key,$safety=true) {
+	Show(String $Key, Bool $Safety=TRUE):
+	self {
 	/*//
-	@argv string Key
-	@return self
 	echo the data under the selected key.
 	//*/
 
-		if(array_key_exists($key,$this->Storage)) {
-			if($safety) echo htmlentities($this->Storage[$key]);
-			else echo $this->Storage[$key];
+		if(array_key_exists($Key,$this->Storage)) {
+			if($Safety) echo htmlentities($this->Storage[$Key]);
+			else echo $this->Storage[$Key];
 		}
 
 		return $this;
@@ -781,15 +790,21 @@ surface-theme-path (web url path).
 	scope for.
 	//*/
 
-		$Scope = [ 'surface' => $this ];
+		$Scope = [
+			'Surface' => $this,
+			'surface' => $this // this one is deprecated stop using it.
+		];
+
+		// compile any global scope items.
 
 		Ki::Flow(
 			"surface-render-scope",
 			[&$Scope]
 		);
 
-		if($Area !== NULL)
-		Ki::Flow(
+		// compile any area specific scope items.
+
+		if($Area !== NULL) Ki::Flow(
 			"surface-render-scope-{$Area}",
 			[&$Scope]
 		);
@@ -801,88 +816,86 @@ surface-theme-path (web url path).
 	////////////////
 
 	public function
-	GetThemeFile($name,$stack=null) {
+	GetThemeFile(String $Name, $Stack=NULL):
+	?String {
 	/*//
-	@argv string Filename
-	@argv string Filename, string StackDefine
-	@argv string Filename, array StackList
-	@return string or false.
 	run through the theme stack and attempt to locate a file that matches the
 	request. if found it returns the full filepath to that file - if not then
 	it returns boolean false.
 	//*/
 
+		$Theme = NULL;
+
 		// if we passed a stacked request handle it. else assume the stack
 		// was passed explictly in the stack argument already.
-		if(strpos($name,':') !== false) {
-			$stack = explode(':',$name);
-			$name = array_pop($stack);
+
+		if(strpos($Name,':') !== FALSE) {
+			$Stack = explode(':',$Name);
+			$Name = array_pop($Stack);
 		}
 
-		foreach($this->GetThemeStack($stack) as $theme) {
-			$filename = sprintf(
+		foreach($this->GetThemeStack($Stack) as $Theme) {
+			$Filename = sprintf(
 				'%s/%s/%s',
 				$this->ThemeRoot,
-				$theme,
-				$name
+				$Theme,
+				$Name
 			);
 
-			// if this theme file was not found pray continue.
-			if(!file_exists($filename) || !is_readable($filename))
+			if(!file_exists($Filename) || !is_readable($Filename))
 			continue;
 
-			// else it seems valid enough so use it.
-			return $filename;
+			return $Filename;
 		}
 
-		return false;
+		return NULL;
 	}
 
 	public function
-	GetThemeStack($input=null) {
+	GetThemeStack($Input=NULL):
+	Array {
 	/*//
 	@argv string ThemeStackSpecification
 	@argv array ThemeStackList
-	@return array
 	if given a string it will split the string on colons to generate the
 	input list of the theme stack. this is how stacks will be custom
 	selected by the area method. if given an array then that is just it.
 	it returns a list of all the themes to check for requested files.
 	//*/
 
-		if(is_string($input)) {
-			// accept a string:like:this for custom stacking.
-			$stack = explode(':',$input);
-		}
-		elseif(is_array($input)) {
-			// accept a straight array.
-			$stack = $input;
-		}
-		else {
-			// else start with an empty slate.
-			$stack = [];
-		}
+		$Stack = NULL;
 
-		// append the configured theme.
-		$stack[] = $this->Theme;
+		// accept a string:like:this for custom stacking.
+		if(is_string($Input))
+		$Stack = explode(':',$Input);
 
-		// append the default theme stack.
-		if(is_array(Option::Get('surface-theme-stack'))) {
-			$stack = array_merge(
-				$stack,
-				Option::Get('surface-theme-stack')
-			);
-		}
-		elseif(is_string(Option::Get('surface-theme-stack'))) {
-			$stack[] = Option::Get('surface-theme');
-		}
+		// accept a straight array.
+		elseif(is_array($Input))
+		$Stack = $Input;
+
+		// else start with an empty slate.
+		else
+		$Stack = [];
+
+		////////
+
+		$Stack[] = $this->Theme;
+
+		if(is_array(Option::Get('surface-theme-stack')))
+		$Stack = array_merge(
+			$Stack,
+			Option::Get('surface-theme-stack')
+		);
+
+		elseif(is_string(Option::Get('surface-theme-stack')))
+		$Stack[] = Option::Get('surface-theme');
 
 		// and return the stack.
-		return $stack;
+		return $Stack;
 	}
 
 	public function
-	GetThemeURI($input) {
+	GetThemeURI(String $Input) {
 	/*//
 	@argv string Input
 	@return string
@@ -892,31 +905,47 @@ surface-theme-path (web url path).
 	in this case, so it will just be from the top of the stack.
 	//*/
 
-		$stack = explode(':',$input);
-		$file = array_pop($stack);
+		$Stack = explode(':',$Input);
+		$File = array_pop($Stack);
 
-		$stack = $this->GetThemeStack($stack);
+		$Stack = $this->GetThemeStack($Stack);
 
 		return sprintf(
 			'/%s/%s/%s',
 			trim(Option::Get('surface-theme-path'),'/'),
-			$stack[0],
-			$file
+			$Stack[0],
+			$File
 		);
 	}
 
 	///////////////////////////////////////////////////////////////////////////
-	// deprecated / backwards compat crap /////////////////////////////////////
+	// magic api //////////////////////////////////////////////////////////////
+
+	// some apis for contextual aware usages.
 
 	public function
-	Area(String $Input, Bool $Return=FALSE) {
-	/*//
-	this function exists for backwards compat and is basically a binary alias
-	to the GetArea and ShowArea methods.
-	//*/
+	Area(String $Input, $Opt=NULL) {
 
-		if(!$Return) return $this->ShowArea($Input);
-		else return $this->GetArea($Input);
+		// this return stuff is backwards compat.
+		// giving us a bool here is depreciated.
+
+		$Return = FALSE;
+
+		if(is_bool($Opt))
+		$Return = $Opt;
+
+		////////
+
+		$Opt = new Nether\Object\Mapped($Opt,[
+			'Return' => $Return
+		]);
+
+		////////
+
+		if(!$Opt->Return)
+		return $this->ShowArea($Input);
+
+		return $this->GetArea($Input);
 	}
 
 }
