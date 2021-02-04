@@ -1,8 +1,10 @@
 <?php
 
 namespace Nether\Surface\Test;
-use \Nether;
-use \PHPUnit as PHPUnit;
+
+use Nether;
+
+use PHPUnit;
 
 ////////
 ////////
@@ -209,10 +211,10 @@ extends PHPUnit\Framework\TestCase {
 	TestFinalRenderingSolution() {
 		ob_start();
 		// main screen turn on.
-			$surface = new Nether\Surface;
-			$surface->Start();
-			$surface->ShowArea('index');
-			$surface->Render();
+		$surface = new Nether\Surface;
+		$surface->Start();
+		$surface->ShowArea('index');
+		$surface->Render();
 		$content = ob_get_clean();
 
 		$this->AssertTrue($content === 'output: this is the index page');
