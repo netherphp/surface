@@ -421,15 +421,11 @@ surface-theme-path (web url path).
 
 		ob_start();
 
-		call_user_func(
-			function($__Filename,$__Scope){
-				extract($__Scope); unset($__Scope);
-				require($__Filename);
-				return;
-			},
-			$Template,
-			$this->GetRenderScope('design')
-		);
+		(static function(string $__Filename, array $__Scope){
+			extract($__Scope); unset($__Scope);
+			require($__Filename);
+			return;
+		})($Template,$this->GetRenderScope('design'));
 
 		if(!$Return) {
 			// print it out if we didn't want it back.
