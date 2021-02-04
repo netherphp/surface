@@ -14,9 +14,8 @@
 		"netherphp/ki":">=1.0",
 		"netherphp/object":">=3.0",
 		"netherphp/option":">=1.0",
-		"netherphp/stash":">=2.0"
-	},
-	"require-dev":{
+		"netherphp/stash":">=2.0",
+		"phpunit/phpunit": "^9.5"
 	},
 	"autoload":{
 		"psr-0": {
