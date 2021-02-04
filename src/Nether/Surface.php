@@ -577,7 +577,7 @@ surface-theme-path (web url path).
 	// new area api ////////////////////////////////////////////////////////////
 
 	public function
-	GetArea(String $Which):
+	GetArea(String $Which, Array|Object $Opt=NULL):
 	String {
 	/*//
 	attempt to fetch the result of the specified area file. it takes a string
@@ -618,19 +618,19 @@ surface-theme-path (web url path).
 				return;
 			},
 			$Filename,
-			$this->GetRenderScope($Area)
+			$this->GetRenderScope($Area,$Opt)
 		);
 		return ob_get_clean();
 	}
 
 	public function
-	ShowArea(String $Which):
+	ShowArea(String $Which, Array|Object $Opt=NULL):
 	self {
 	/*//
 	wraps the GetArea method for instant printign.
 	//*/
 
-		echo $this->GetArea($Which);
+		echo $this->GetArea($Which,$Opt);
 		return $this;
 	}
 
@@ -809,9 +809,10 @@ surface-theme-path (web url path).
 	////////////////
 
 	public function
-	GetRenderScope($Area=NULL):
+	GetRenderScope($Area=NULL, $Opt=NULL):
 	Array {
 	/*//
+	@date 2015-07-30
 	allow other libraries to attach data to the render system to create a
 	variable to be accessable within theme templates. the scope is an
 	associative array passed around by reference. in the theme file it will
@@ -819,21 +820,31 @@ surface-theme-path (web url path).
 	scope for.
 	//*/
 
+		$Opt = new Nether\Object\Mapped($Opt,[
+			'Masquerade' => NULL,
+			'Scope'      => NULL // @todo 2021-01-18
+		]);
+
+		$Area = $Opt->Masquerade ?? $Area;
+
+		////////
+
 		$Scope = [
 			'Surface' => $this,
-			'surface' => $this // this one is deprecated stop using it.
+			'Area'    => $Area
 		];
 
 		// compile any global scope items.
 
-		Ki::Flow(
+		Nether\Ki::Flow(
 			"surface-render-scope",
 			[&$Scope]
 		);
 
 		// compile any area specific scope items.
 
-		if($Area !== NULL) Ki::Flow(
+		if($Area !== NULL)
+		Nether\Ki::Flow(
 			"surface-render-scope-{$Area}",
 			[&$Scope]
 		);
@@ -954,27 +965,22 @@ surface-theme-path (web url path).
 
 	public function
 	Area(String $Input, $Opt=NULL) {
-
-		// this return stuff is backwards compat.
-		// giving us a bool here is depreciated.
-
-		$Return = FALSE;
-
-		if(is_bool($Opt))
-		$Return = $Opt;
-
-		////////
+	/*//
+	@date 2015-07-28
+	//*/
 
 		$Opt = new Nether\Object\Mapped($Opt,[
-			'Return' => $Return
+			'Return'     => FALSE,
+			'Masquerade' => NULL,
+			'Scope'      => NULL
 		]);
 
 		////////
 
 		if(!$Opt->Return)
-		return $this->ShowArea($Input);
+		return $this->ShowArea($Input,$Opt);
 
-		return $this->GetArea($Input);
+		return $this->GetArea($Input,$Opt);
 	}
 
 }
