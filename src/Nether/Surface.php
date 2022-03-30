@@ -577,50 +577,96 @@ surface-theme-path (web url path).
 	// new area api ////////////////////////////////////////////////////////////
 
 	public function
-	GetArea(String $Which, Array|Object $Opt=NULL):
-	String {
+	GetArea(string $Which, array|object $Opt=NULL):
+	string {
 	/*//
-	attempt to fetch the result of the specified area file. it takes a string
-	to the requested area relative to the current theme. it can also be
-	prefixed with a theme stack with colons to customise which theme this
-	request comes from.
+	@date 2022-03-30
+	render the specified area file. the path to the area file should be
+	specified from the theme root, with an optional stack of themes prepended
+	prior for it to search before the current theme. query data can also be
+	supplied to the area files via their pathing. this data will be digested
+	the same as a url query string and will have those variables appended to
+	the inner scope of the area file.
 
-	* index/home
-	* alt:index/home
-	* alt1:alt2:index/home
+		* index/home
+		* index/home?var1=one&var2=two
+		* alt:index/home
+		* alt1:alt2:index/home?var1=one&var2=two
 
-	with a technically infinite number of stacks. throws an exception if no
-	files were found to handle the surface area.
+	any query data provided this way will overwrite any previous supplied
+	scope data thorugh your application.
 	//*/
 
-		$Stack = explode(':',$Which);
-		$Area = array_pop($Stack);
+		$Stack = NULL;
+		$Area = NULL;
+		$AreaData = NULL;
+		$Query = NULL;
+		$QueryData = NULL;
+		$Filename = NULL;
+		$Output = NULL;
 
-		$Filename = $this->GetThemeFile(
-			"area/{$Area}.phtml",
-			$Stack
-		);
+		$Opt = new Nether\Object\Mapped($Opt,[
+			'Scope' => NULL
+		]);
+
+		////////
+
+		// chop up the theme stack.
+
+		$Stack = explode(':', $Which);
+
+		// the last item of the stack is the area data.
+
+		$AreaData = array_pop($Stack);
+
+		// chop the area by its supplied query data.
+
+		$Query = explode('?', $AreaData);
+
+		////////
+
+		// determine the area file.
+
+		$Area = $Query[0];
+		$Filename = $this->GetThemeFile("area/{$Area}.phtml", $Stack);
 
 		if(!$Filename)
-		throw new Exception("no surface area matching {$Which} could be located.");
-
-		// notification of beginning a render process.
-		Nether\Ki::Flow('surface-render-init',[$this],FALSE);
+		throw new Exception("no surface area matching {$Area} could be located.");
 
 		////////
+
+		// determine the query data.
+
+		if(isset($Query[1]))
+		parse_str($Query[1], $QueryData);
+
+		if(isset($Opt->Scope) && is_array($Opt->Scope))
+		$Opt->Scope = array_merge($Opt->Scope, $QueryData);
+
+		else
+		$Opt->Scope = $QueryData;
+
 		////////
 
-		ob_start();
-		call_user_func(
-			function($__Filename,$__Scope){
-				extract($__Scope); unset($__Scope);
+		Nether\Ki::Flow('surface-render-init', [ $this ], FALSE);
+
+		$Output = (function(string $__Filename, array $__Scope) {
+			ob_start();
+
+			(function(string $__Filename, array $__Scope) {
+				extract($__Scope);
+				unset($__Scope);
 				require($__Filename);
 				return;
-			},
-			$Filename,
-			$this->GetRenderScope($Area,$Opt)
-		);
-		return ob_get_clean();
+			})
+			($__Filename, $__Scope);
+
+			return ob_get_clean();
+		})($Filename, $this->GetRenderScope($Area, $Opt));
+
+		////////
+
+		return $Output;
 	}
 
 	public function
@@ -848,6 +894,11 @@ surface-theme-path (web url path).
 			"surface-render-scope-{$Area}",
 			[&$Scope]
 		);
+
+		// merge in any deliberate data.
+
+		if(is_array($Opt->Scope))
+		$Scope = array_merge($Scope, $Opt->Scope);
 
 		return $Scope;
 	}
