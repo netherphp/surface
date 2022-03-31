@@ -606,7 +606,7 @@ surface-theme-path (web url path).
 		$Output = NULL;
 
 		$Opt = new Nether\Object\Mapped($Opt,[
-			'Scope' => NULL
+			'Scope' => []
 		]);
 
 		////////
@@ -640,11 +640,13 @@ surface-theme-path (web url path).
 		if(isset($Query[1]))
 		parse_str($Query[1], $QueryData);
 
-		if(isset($Opt->Scope) && is_array($Opt->Scope))
-		$Opt->Scope = array_merge($Opt->Scope, $QueryData);
+		if(is_array($QueryData)) {
+			if(isset($Opt->Scope) && is_array($Opt->Scope))
+			$Opt->Scope = array_merge($Opt->Scope, $QueryData);
 
-		else
-		$Opt->Scope = $QueryData;
+			else
+			$Opt->Scope = $QueryData;
+		}
 
 		////////
 
@@ -1023,7 +1025,7 @@ surface-theme-path (web url path).
 		$Opt = new Nether\Object\Mapped($Opt,[
 			'Return'     => FALSE,
 			'Masquerade' => NULL,
-			'Scope'      => NULL
+			'Scope'      => []
 		]);
 
 		////////
