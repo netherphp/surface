@@ -6,13 +6,14 @@
 	"authors":[
 		{
 			"name": "Bob Majdak Jr",
-			"email": "bob@pegasusgate.net",
+			"email": "bmajdak@php.net",
 			"homepage": "http://pegasusgate.net/+bob",
 			"role": "developer"
 		}
 	],
 	"require":{
-		"php": ">=8.0"
+		"php": ">=8.0",
+		"netherphp/ki": "dev-redux"
 	},
 	"autoload":{
 		"psr-0": {
@@ -21,6 +22,12 @@
 	},
 	"require-dev": {
 		"phpunit/phpunit": "^9.5",
-		"netherphp/standards": "^0.2.5"
+		"netherphp/standards": ">=0.1.9",
+		"dealerdirect/phpcodesniffer-composer-installer": "^0.7.2"
+	},
+	"config": {
+		"allow-plugins": {
+			"dealerdirect/phpcodesniffer-composer-installer": true
+		}
 	}
 }

@@ -22,7 +22,6 @@
 			<directory suffix=".php">src</directory>
 		</include>
 		<exclude>
-			<file>src/Nether/Object/Mapped.php</file>
 		</exclude>
 	</coverage>
 </phpunit>
