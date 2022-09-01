@@ -197,7 +197,7 @@ class Engine {
 
 		$Output = [
 			'Surface' => $this,
-			'Area' => $Area
+			'Area'    => $Area
 		];
 
 		// merge in globally bound items.
@@ -221,7 +221,6 @@ class Engine {
 	string {
 
 		extract($__SCOPE);
-		unset($__SCOPE);
 
 		ob_start();
 		require($__FILENAME);
@@ -234,7 +233,6 @@ class Engine {
 	string {
 
 		extract($__SCOPE);
-		unset($__SCOPE);
 
 		ob_start();
 		require($__FILENAME);
