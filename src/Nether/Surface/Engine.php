@@ -108,6 +108,13 @@ class Engine {
 	////////////////////////////////////////////////////////////////
 
 	public function
+	Has(string $Key):
+	bool {
+
+		return isset($this->Data[$Key]) && $this->Data[$Key];
+	}
+
+	public function
 	Get(string $Key):
 	mixed {
 
