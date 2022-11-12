@@ -104,6 +104,13 @@ class Engine {
 		return $Output;
 	}
 
+	public function
+	IsCapturing():
+	bool {
+
+		return $this->Capturing;
+	}
+
 	////////////////////////////////////////////////////////////////
 	////////////////////////////////////////////////////////////////
 
@@ -259,6 +266,7 @@ class Engine {
 	?string {
 
 		$Path = NULL;
+		$Theme = NULL;
 
 		foreach($this->Themes as $Theme) {
 			$Path = realpath(sprintf(
@@ -280,6 +288,7 @@ class Engine {
 	?string {
 
 		$Path = NULL;
+		$Theme = NULL;
 
 		foreach($this->Themes as $Theme) {
 			$Path = realpath(sprintf(
