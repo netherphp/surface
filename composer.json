@@ -13,7 +13,8 @@
 	],
 	"require":{
 		"php": ">=8.0",
-		"netherphp/ki": "dev-redux"
+		"netherphp/ki": "dev-redux",
+		"netherphp/common": "dev-master"
 	},
 	"autoload":{
 		"psr-0": {

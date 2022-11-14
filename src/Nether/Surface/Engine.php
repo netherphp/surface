@@ -54,6 +54,8 @@ class Engine {
 
 		////////
 
+		$this->LoadThemeFile();
+
 		return;
 	}
 
@@ -154,6 +156,17 @@ class Engine {
 	////////////////////////////////////////////////////////////////
 
 	public function
+	Wrap(string $Area, array $Scope=[], ?string $Masq=NULL, ?string $Wrapper=NULL):
+	static {
+
+		$Scope['Area'] = $Area;
+		$Wrapper ??= $this->Get('Theme.Page.Wrapper') ?? 'page-wrapper';
+		$Masq ??= $Area;
+
+		return $this->Area($Wrapper, $Scope, $Masq);
+	}
+
+	public function
 	Area(string $Area, array $Scope=[], ?string $Masquerade=NULL):
 	static {
 
@@ -187,6 +200,13 @@ class Engine {
 		return $this->Content;
 	}
 
+	public function
+	GetTheme():
+	string {
+
+		return $this->Themes[array_key_first($this->Themes)];
+	}
+
 	////////////////////////////////////////////////////////////////
 	////////////////////////////////////////////////////////////////
 
@@ -209,6 +229,23 @@ class Engine {
 
 	////////////////////////////////////////////////////////////////
 	////////////////////////////////////////////////////////////////
+
+	public function
+	LoadThemeFile():
+	static {
+
+		$Design = $this->FindDesignFile();
+
+		if(!$Design)
+		return $this;
+
+		$File = str_replace('/design.phtml', '/design.php', $Design);
+
+		if(file_exists($File))
+		$this->ExecThemeFile($File);
+
+		return $this;
+	}
 
 	public function
 	BuildRenderScope(?string $Area=NULL, array $Scope=[], ?string $Masquerade=NULL):
@@ -259,6 +296,20 @@ class Engine {
 		require($__FILENAME);
 
 		return ob_get_clean();
+	}
+
+	protected function
+	ExecThemeFile(string $__FILENAME):
+	void {
+
+		$Jail = function(string $__FILENAME, Engine $Surface) {
+			require_once($__FILENAME);
+			return;
+		};
+
+		$Jail($__FILENAME, $this);
+
+		return;
 	}
 
 	protected function
