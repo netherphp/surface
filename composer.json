@@ -12,9 +12,9 @@
 		}
 	],
 	"require":{
-		"php": ">=8.0",
-		"netherphp/ki": "dev-redux",
-		"netherphp/common": "^5.0"
+		"php": ">=8.1",
+		"netherphp/common": "^5.0",
+		"netherphp/ki": "dev-redux"
 	},
 	"autoload":{
 		"psr-0": {
