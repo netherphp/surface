@@ -1,7 +1,8 @@
 <?php
 
 namespace Nether\Surface;
-use Nether;
+
+use Nether\Common;
 
 use Nether\Object\Datastore;
 use Nether\Object\Prototype;
@@ -239,7 +240,11 @@ class Engine {
 		if(!$Design)
 		return $this;
 
-		$File = str_replace('/design.phtml', '/design.php', $Design);
+		$File = str_replace(
+			Common\Filesystem\Util::Repath('/design.phtml'),
+			Common\Filesystem\Util::Repath('/design.php'),
+			$Design
+		);
 
 		if(file_exists($File))
 		$this->ExecThemeFile($File);

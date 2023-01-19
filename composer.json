@@ -13,7 +13,7 @@
 	],
 	"require":{
 		"php": ">=8.1",
-		"netherphp/common": "^5.0",
+		"netherphp/common": "^5.0.4",
 		"netherphp/ki": "dev-redux"
 	},
 	"autoload":{
