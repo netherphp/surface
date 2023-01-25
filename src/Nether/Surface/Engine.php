@@ -4,8 +4,8 @@ namespace Nether\Surface;
 
 use Nether\Common;
 
-use Nether\Object\Datastore;
-use Nether\Object\Prototype;
+use Nether\Common\Datastore;
+use Nether\Common\Prototype;
 use Nether\Ki\CallbackPackage;
 
 class Engine {
