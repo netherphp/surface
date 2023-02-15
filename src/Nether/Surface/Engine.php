@@ -215,16 +215,24 @@ class Engine {
 	Render():
 	static {
 
-		$File = $this->FindDesignFile();
+		$DFile = $this->FindDesignFile();
 		$Scope = $this->BuildRenderScope();
 		$Scope['Output'] = $this->Content;
 
-		if($File === NULL) {
+		if($DFile === NULL) {
 			echo "[No Design Templates Found]";
 			return $this;
 		}
 
-		echo $this->ExecDesignFile($File, $Scope);
+		/*
+		$TFile = str_replace('design.phtml', 'design.php', $DFile);
+
+		if(file_exists($TFile))
+		$this->ExecThemeFile($TFile, $Scope);
+		*/
+
+		echo $this->ExecDesignFile($DFile, $Scope);
+
 		return $this;
 	}
 
@@ -236,6 +244,7 @@ class Engine {
 	static {
 
 		$Design = $this->FindDesignFile();
+		$Scope = [ 'Surface'=> $this ];
 
 		if(!$Design)
 		return $this;
@@ -247,7 +256,7 @@ class Engine {
 		);
 
 		if(file_exists($File))
-		$this->ExecThemeFile($File);
+		$this->ExecThemeFile($File, $Scope);
 
 		return $this;
 	}
@@ -304,15 +313,16 @@ class Engine {
 	}
 
 	protected function
-	ExecThemeFile(string $__FILENAME):
+	ExecThemeFile(string $__FILENAME, array $__SCOPE=[]):
 	void {
 
-		$Jail = function(string $__FILENAME, Engine $Surface) {
+		$Jail = function(string $__FILENAME, $__SCOPE) {
+			extract($__SCOPE);
 			require_once($__FILENAME);
 			return;
 		};
 
-		$Jail($__FILENAME, $this);
+		$Jail($__FILENAME, $__SCOPE);
 
 		return;
 	}
