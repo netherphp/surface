@@ -4,8 +4,6 @@ namespace Nether\Surface;
 
 use Nether\Common;
 
-use Nether\Common\Datastore;
-use Nether\Common\Prototype;
 use Nether\Ki\CallbackPackage;
 
 class Engine {
@@ -13,7 +11,14 @@ class Engine {
 	use
 	CallbackPackage;
 
-	public Datastore
+	const
+	ThemePageScripts = 'Theme.Page.Scripts',
+	ThemePageStyles = 'Theme.Page.Styles';
+
+	////////////////////////////////////////////////////////////////
+	////////////////////////////////////////////////////////////////
+
+	public Common\Datastore
 	$Data;
 
 	public array
@@ -35,9 +40,9 @@ class Engine {
 	////////////////////////////////////////////////////////////////
 
 	public function
-	__Construct(Datastore $Config) {
+	__Construct(Common\Datastore $Config) {
 
-		$this->Data = new Datastore;
+		$this->Data = new Common\Datastore;
 		$this->ThemeRoot = $Config[Library::ConfThemeRoot];
 
 		////////
@@ -55,6 +60,8 @@ class Engine {
 
 		////////
 
+		$this->Define(static::ThemePageScripts, new Common\Datastore);
+		$this->Define(static::ThemePageStyles, new Common\Datastore);
 		$this->LoadThemeFile();
 
 		return;
@@ -118,6 +125,16 @@ class Engine {
 	////////////////////////////////////////////////////////////////
 
 	public function
+	Define(string $Key, mixed $Data):
+	static {
+
+		if(!$this->Data->HasKey($Key))
+		$this->Data[$Key] = $Data;
+
+		return $this;
+	}
+
+	public function
 	Has(string $Key):
 	bool {
 
@@ -149,6 +166,26 @@ class Engine {
 
 		else
 		echo $this->Get($Key);
+
+		return $this;
+	}
+
+	public function
+	AddScriptURL(string $URL):
+	static {
+
+		if(!$this->Data[static::ThemePageScripts]->HasValue($URL))
+		$this->Data[static::ThemePageScripts]->Push($URL);
+
+		return $this;
+	}
+
+	public function
+	AddStyleURL(string $URL):
+	static {
+
+		if(!$this->Data[static::ThemePageStyles]->HasValue($URL))
+		$this->Data[static::ThemePageStyles]->Push($URL);
 
 		return $this;
 	}
