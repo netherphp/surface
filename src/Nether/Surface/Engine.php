@@ -205,8 +205,18 @@ class Engine {
 	}
 
 	public function
-	Area(string $Area, array $Scope=[], ?string $Masquerade=NULL):
+	Area(string $Area, iterable $Scope=[], ?string $Masquerade=NULL):
 	static {
+
+		$Scope = match(TRUE) {
+			(!is_array($Scope))
+			=> iterator_to_array($Scope),
+
+			default
+			=> (array)$Scope
+		};
+
+		////////
 
 		$Area = Util::MakePathableKey($Area);
 		$Scope = $this->BuildRenderScope($Area, $Scope, $Masquerade);
