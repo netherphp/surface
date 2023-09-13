@@ -7,16 +7,23 @@ use Nether\Common;
 use Stringable;
 
 #[Common\Meta\Date('2023-09-12')]
+#[Common\Meta\Info('Base class for building UI widgets in templates.')]
 class Element
 extends Common\Prototype
 implements Stringable {
 
-	public string
-	$UUID;
-
+	#[Common\Meta\Info('Define the theme template file. Subclasses should define this.')]
 	public string
 	$Area;
 
+	////////////////////////////////////////////////////////////////
+	////////////////////////////////////////////////////////////////
+
+	#[Common\Meta\PropertyFactory([ Common\UUID::class, 'V7' ])]
+	public string
+	$UUID;
+
+	#[Common\Meta\PropertyObjectify]
 	public Common\Datastore
 	$Data;
 
@@ -30,8 +37,6 @@ implements Stringable {
 	__Construct(Engine $Surface) {
 		parent::__Construct();
 
-		$this->UUID = Common\UUID::V7();
-		$this->Data = new Common\Datastore;
 		$this->Surface = $Surface;
 
 		return;
