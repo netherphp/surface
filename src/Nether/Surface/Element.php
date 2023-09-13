@@ -42,6 +42,13 @@ implements Stringable {
 		return;
 	}
 
+	static public function
+	FromSurface(Engine $Surface):
+	static {
+
+		return new static($Surface);
+	}
+
 	public function
 	__ToString():
 	string {
