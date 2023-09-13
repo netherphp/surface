@@ -194,7 +194,7 @@ class Engine {
 	////////////////////////////////////////////////////////////////
 
 	public function
-	Wrap(string $Area, array $Scope=[], ?string $Masq=NULL, ?string $Wrapper=NULL):
+	Wrap(string $Area, iterable $Scope=[], ?string $Masq=NULL, ?string $Wrapper=NULL):
 	static {
 
 		$Scope['Area'] = $Area;
@@ -232,7 +232,7 @@ class Engine {
 	}
 
 	public function
-	GetArea(string $Area, array $Scope=[], ?string $Masquerade=NULL):
+	GetArea(string $Area, iterable $Scope=[], ?string $Masquerade=NULL):
 	string {
 
 		ob_start();
