@@ -8,13 +8,19 @@ use Stringable;
 
 #[Common\Meta\Date('2023-09-12')]
 #[Common\Meta\Info('Base class for building UI widgets in templates.')]
-class Element
+abstract class Element
 extends Common\Prototype
 implements Stringable {
 
 	#[Common\Meta\Info('Define the theme template file. Subclasses should define this.')]
 	public string
 	$Area;
+
+	public ?string
+	$ParentType = NULL;
+
+	public ?string
+	$ParentUUID = NULL;
 
 	////////////////////////////////////////////////////////////////
 	////////////////////////////////////////////////////////////////
@@ -170,14 +176,8 @@ implements Stringable {
 	////////////////////////////////////////////////////////////////
 	// Utility Methods /////////////////////////////////////////////
 
-	static public function
+	abstract static public function
 	ExpandAreaPath(string $Area):
-	string {
-
-		if(str_starts_with($Area, '~/'))
-		$Area = preg_replace('#^~/#', 'elements/slider/', $Area);
-
-		return $Area;
-	}
+	string;
 
 };
