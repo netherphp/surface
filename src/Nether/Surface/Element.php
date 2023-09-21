@@ -176,8 +176,11 @@ implements Stringable {
 	////////////////////////////////////////////////////////////////
 	// Utility Methods /////////////////////////////////////////////
 
-	abstract static public function
+	static public function
 	ExpandAreaPath(string $Area):
-	string;
+	string {
+
+		return $Area;
+	}
 
 };
