@@ -41,11 +41,18 @@ implements Stringable {
 
 	public function
 	__Construct(Engine $Surface) {
-		parent::__Construct();
 
 		$this->Surface = $Surface;
 
+		parent::__Construct();
 		return;
+	}
+
+	public function
+	__ToString():
+	string {
+
+		return $this->Render();
 	}
 
 	static public function
@@ -55,11 +62,19 @@ implements Stringable {
 		return new static($Surface);
 	}
 
-	public function
-	__ToString():
-	string {
+	static public function
+	FromSurfaceWith(Engine $Surface, iterable $Props):
+	static {
 
-		return $this->Render();
+		$Output = static::FromSurface($Surface);
+		$Key = NULL;
+		$Val = NULL;
+
+		foreach($Props as $Key => $Val)
+		if(property_exists($Output, $Key))
+		$Output->{$Key} = $Val;
+
+		return $Output;
 	}
 
 	////////////////////////////////////////////////////////////////
