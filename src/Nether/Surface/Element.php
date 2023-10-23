@@ -12,15 +12,19 @@ abstract class Element
 extends Common\Prototype
 implements Stringable {
 
-	#[Common\Meta\Info('Define the theme template file. Subclasses should define this.')]
+	#[Common\Meta\Info('Define the theme template file. Subclasses should (re)define this.')]
 	public string
 	$Area;
 
-	public ?string
-	$ParentType = NULL;
+	#[Common\Meta\PropertyFactory('FromArray', 'JSModules')]
+	#[Common\Meta\Info('Define any JS module files associated with this widget. Subclasses should (re)define this.')]
+	public array|Common\Datastore
+	$JSModules = [];
 
-	public ?string
-	$ParentUUID = NULL;
+	#[Common\Meta\PropertyFactory('FromArray', 'JSReady')]
+	#[Common\Meta\Info('Define any JS lines to print as document ready code.')]
+	public array|Common\Datastore
+	$JSReady = [];
 
 	////////////////////////////////////////////////////////////////
 	////////////////////////////////////////////////////////////////
@@ -43,8 +47,18 @@ implements Stringable {
 	__Construct(Engine $Surface) {
 
 		$this->Surface = $Surface;
-
 		parent::__Construct();
+
+		// in this instance it is asked child classes redefine a few
+		// properties and that will undo the PropertyFactory if overwritten
+		// without one.
+
+		if(is_array($this->JSModules))
+		$this->JSModules = Common\Datastore::FromArray($this->JSModules);
+
+		if(is_array($this->JSReady))
+		$this->JSReady = Common\Datastore::FromArray($this->JSReady);
+
 		return;
 	}
 
@@ -71,8 +85,23 @@ implements Stringable {
 		$Val = NULL;
 
 		foreach($Props as $Key => $Val)
-		if(property_exists($Output, $Key))
-		$Output->{$Key} = $Val;
+		if(property_exists($Output, $Key)) {
+
+			if(isset($Output->{$Key})) {
+				// if we tried to fill a datastore with something it
+				// can consume then do it.
+				if($Output->{$Key} instanceof Common\Datastore) {
+					if(is_iterable($Val)) {
+						$Output->{$Key}->SetData($Val);
+						continue;
+					}
+				}
+			}
+
+			// else fall back to the assignment.
+
+			$Output->{$Key} = $Val;
+		}
 
 		return $Output;
 	}
@@ -103,12 +132,13 @@ implements Stringable {
 	GetID():
 	string {
 
-		$Output = sprintf(
+		if(Common\Filters\Text::UUID($this->UUID))
+		return sprintf(
 			'el-%s',
 			preg_replace('#[^a-z0-9]#', '', $this->UUID)
 		);
 
-		return $Output;
+		return $this->UUID;
 	}
 
 	public function
@@ -142,6 +172,178 @@ implements Stringable {
 		$this->Data['Element'] = $this;
 
 		return $this->Data;
+	}
+
+	////////////////////////////////////////////////////////////////
+	// LOCAL: JS SCRIPT API ////////////////////////////////////////
+
+	#[Common\Meta\Date('2023-10-23')]
+	#[Common\Meta\Info('Define the string replacements for imports.')]
+	public function
+	TokenJSImports():
+	Common\Datastore {
+
+		return Common\Datastore::FromArray([
+			'ID'         => $this->GetID(),
+			'SelectorID' => $this->GetSelectorID()
+		]);
+	}
+
+	#[Common\Meta\Date('2023-10-23')]
+	#[Common\Meta\Info('Get list of all the imports.')]
+	public function
+	GetJSImports():
+	Common\Datastore {
+
+		$Output = new Common\Datastore;
+
+		$this->JSModules->Each(
+			fn(string $URL, string $Token)
+			=> $Output->Push(sprintf('import %s from "%s";', $Token, $URL))
+		);
+
+		return $Output;
+	}
+
+	#[Common\Meta\Date('2023-10-23')]
+	#[Common\Meta\Info('Render Javascript import lines to string.')]
+	public function
+	RenderJSImports():
+	string {
+
+		$Output = (
+			($this->JSModules)
+			->Map(function(string $Line) {
+				($this->TokenJSImports())
+				->Each(function(string $V, string $T) use(&$Line) {
+					$Line = str_replace(
+						Common\Text::TemplateMakeToken($T), $V,
+						$Line
+					);
+
+					return;
+				});
+
+				return $Line;
+			})
+			->RemapKeys(
+				fn(string $T, string $V)
+				=> [ $T => sprintf('import %s from "%s";', $T, $V) ]
+			)
+			->Push('')
+			->Join(PHP_EOL)
+		);
+
+		return $Output;
+	}
+
+	#[Common\Meta\Date('2023-10-23')]
+	#[Common\Meta\Info('Print Javascript import code.')]
+	public function
+	PrintJSImports():
+	static {
+
+		echo $this->RenderJSImports();
+		echo PHP_EOL;
+
+		return $this;
+	}
+
+	////////
+
+	#[Common\Meta\Date('2023-10-23')]
+	#[Common\Meta\Info('Define the string replacements for ready lines.')]
+	public function
+	TokenJSReady():
+	Common\Datastore {
+
+		return Common\Datastore::FromArray([
+			'ID'         => $this->GetID(),
+			'SelectorID' => $this->GetSelectorID()
+		]);
+	}
+
+	#[Common\Meta\Date('2023-10-23')]
+	#[Common\Meta\Info('Get list of all the ready lines.')]
+	public function
+	GetJSReady():
+	Common\Datastore {
+
+		return $this->JSReady;
+	}
+
+	#[Common\Meta\Date('2023-10-23')]
+	#[Common\Meta\Info('Render Javascript ready lines to string.')]
+	public function
+	RenderJSReady():
+	string {
+
+		$Code = (
+			($this->JSReady)
+			->Map(function(string $Line) {
+				($this->TokenJSReady())
+				->Each(function(string $V, string $T) use(&$Line) {
+					$Line = str_replace(
+						Common\Text::TemplateMakeToken($T), $V,
+						$Line
+					);
+
+					return;
+				});
+
+				return "\t{$Line}";
+			})
+			->Push('')
+			->Join(PHP_EOL)
+		);
+
+		$Output = sprintf(
+			"jQuery(function(){\n%s\n\treturn;\n});",
+			$Code
+		);
+
+		return $Output;
+	}
+
+	#[Common\Meta\Date('2023-10-23')]
+	#[Common\Meta\Info('Print Javascript ready code.')]
+	public function
+	PrintJSReady():
+	static {
+
+		echo $this->RenderJSReady();
+		echo PHP_EOL;
+
+		return $this;
+	}
+
+	////////
+
+	#[Common\Meta\Date('2023-10-23')]
+	#[Common\Meta\Info('Render complete Javascript module to string.')]
+	public function
+	RenderJSModule():
+	string {
+
+		$Output = sprintf(
+			"<script type=\"module\">\n%s\n%s\n</script>",
+			$this->RenderJSImports(),
+			$this->RenderJSReady()
+		);
+
+		return $Output;
+	}
+
+	#[Common\Meta\Date('2023-10-23')]
+	#[Common\Meta\Info('Print complete Javascript module.')]
+	public function
+	PrintJSModule():
+	static {
+
+		echo $this->RenderJSModule();
+		echo PHP_EOL;
+
+		return $this;
 	}
 
 	////////////////////////////////////////////////////////////////
