@@ -12,8 +12,9 @@ class Engine {
 	CallbackPackage;
 
 	const
-	ThemePageScripts = 'Theme.Page.Scripts',
-	ThemePageStyles = 'Theme.Page.Styles';
+	ThemePageScripts       = 'Theme.Page.Scripts',
+	ThemePageStyles        = 'Theme.Page.Styles',
+	ThemePageScriptReadyFrags = 'Theme.Page.Shutdown.Areas';
 
 	////////////////////////////////////////////////////////////////
 	////////////////////////////////////////////////////////////////
@@ -186,6 +187,25 @@ class Engine {
 
 		if(!$this->Data[static::ThemePageStyles]->HasValue($URL))
 		$this->Data[static::ThemePageStyles]->Push($URL);
+
+		return $this;
+	}
+
+	public function
+	AddScriptReadyFrag(string $Area):
+	static {
+
+		$Key = static::ThemePageScriptReadyFrags;
+
+		////////
+
+		if(!isset($this->Data[$Key]))
+		$this->Data[$Key] = new Common\Datastore;
+
+		if(!$this->Data[$Key]->HasValue($Area))
+		$this->Data[$Key]->Push($Area);
+
+		////////
 
 		return $this;
 	}
