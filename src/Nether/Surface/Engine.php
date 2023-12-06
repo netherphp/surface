@@ -12,8 +12,9 @@ class Engine {
 	CallbackPackage;
 
 	const
-	ThemePageScripts       = 'Theme.Page.Scripts',
-	ThemePageStyles        = 'Theme.Page.Styles',
+	ThemePageModules          = 'Theme.Page.Modules',
+	ThemePageScripts          = 'Theme.Page.Scripts',
+	ThemePageStyles           = 'Theme.Page.Styles',
 	ThemePageScriptReadyFrags = 'Theme.Page.Shutdown.Areas';
 
 	////////////////////////////////////////////////////////////////
@@ -63,6 +64,7 @@ class Engine {
 
 		$this->Define(static::ThemePageScripts, new Common\Datastore);
 		$this->Define(static::ThemePageStyles, new Common\Datastore);
+		$this->Define(static::ThemePageModules, new Common\Datastore);
 		$this->LoadThemeFile();
 
 		return;
@@ -167,6 +169,16 @@ class Engine {
 
 		else
 		echo $this->Get($Key);
+
+		return $this;
+	}
+
+	public function
+	AddModuleURL(string $URL):
+	static {
+
+		if(!$this->Data[static::ThemePageModules]->HasValue($URL))
+		$this->Data[static::ThemePageModules]->Push($URL);
 
 		return $this;
 	}
