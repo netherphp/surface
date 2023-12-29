@@ -34,6 +34,7 @@ implements Stringable {
 	$UUID;
 
 	#[Common\Meta\PropertyObjectify]
+	#[Common\Meta\Info('Expands into the Scope variables within Surface Templates.')]
 	public Common\Datastore
 	$Data;
 
