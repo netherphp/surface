@@ -26,6 +26,11 @@ implements Stringable {
 	public array|Common\Datastore
 	$JSReady = [];
 
+	#[Common\Meta\PropertyFactory('FromArray', 'DataAttr')]
+	#[Common\Meta\Info('data-attributes=html')]
+	public array|Common\Datastore
+	$DataAttr = [];
+
 	////////////////////////////////////////////////////////////////
 	////////////////////////////////////////////////////////////////
 
@@ -176,6 +181,24 @@ implements Stringable {
 		$this->Data['Element'] = $this;
 
 		return $this->Data;
+	}
+
+	public function
+	GetDataAttrForHTML():
+	string {
+
+		$Output = new Common\Datastore;
+		$K = NULL;
+		$V = NULL;
+
+		////////
+
+		foreach($this->DataAttr as $K => $V)
+		$Output->Push(sprintf('%s="%s"', $K, htmlentities($V)));
+
+		////////
+
+		return $Output->Join(' ');
 	}
 
 	////////////////////////////////////////////////////////////////
