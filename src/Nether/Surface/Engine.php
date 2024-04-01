@@ -152,10 +152,20 @@ class Engine {
 	}
 
 	public function
-	Set(string $Key, mixed $Data):
+	Set(string|array $Key, mixed $Data=NULL):
 	static {
 
-		$this->Data[$Key] = $Data;
+		if(is_string($Key)) {
+			$this->Data[$Key] = $Data;
+			return $this;
+		}
+
+		if(is_array($Key)) {
+			foreach($Key as $K => $V)
+			$this->Data[$K] = $V;
+
+			return $this;
+		}
 
 		return $this;
 	}
@@ -406,7 +416,7 @@ class Engine {
 		return;
 	}
 
-	protected function
+	public function
 	FindAreaFile(string $Area):
 	?string {
 
