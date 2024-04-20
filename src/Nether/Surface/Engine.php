@@ -247,7 +247,7 @@ class Engine {
 	}
 
 	public function
-	Area(string $Area, iterable $Scope=[], ?string $Masquerade=NULL):
+	Area(string $Area, iterable $Scope=[], ?string $Masquerade=NULL, array|string|NULL $Themes=NULL):
 	static {
 
 		$Scope = match(TRUE) {
@@ -262,7 +262,7 @@ class Engine {
 
 		$Area = Util::MakePathableKey($Area);
 		$Scope = $this->BuildRenderScope($Area, $Scope, $Masquerade);
-		$File = $this->FindAreaFile($Area);
+		$File = $this->FindAreaFile($Area, $Themes);
 
 		if($File === NULL) {
 			echo "[Area Not Found: {$Area}]\n";
@@ -417,13 +417,24 @@ class Engine {
 	}
 
 	public function
-	FindAreaFile(string $Area):
+	FindAreaFile(string $Area, array|string|NULL $Themes=NULL):
 	?string {
 
 		$Path = NULL;
 		$Theme = NULL;
 
-		foreach($this->Themes as $Theme) {
+		$Themes = match(TRUE) {
+			(is_string($Themes))
+			=> $Themes = explode(':', $Themes),
+
+			($Themes === NULL)
+			=> $Themes = $this->Themes,
+
+			default
+			=> $Themes
+		};
+
+		foreach($Themes as $Theme) {
 			$Path = realpath(sprintf(
 				'%s/%s/area/%s.phtml',
 				$this->ThemeRoot,
