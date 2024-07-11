@@ -11,6 +11,8 @@
 			"role": "developer"
 		}
 	],
+	"minimum-stability": "dev",
+	"prefer-stable": true,
 	"require":{
 		"php": ">=8.1",
 		"netherphp/common": "dev-master",
