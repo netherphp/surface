@@ -274,6 +274,13 @@ class Engine {
 	}
 
 	public function
+	HasArea(string $Area):
+	bool {
+
+		return $this->FindAreaFile(Util::MakePathableKey($Area)) ?: FALSE;
+	}
+
+	public function
 	GetArea(string $Area, iterable $Scope=[], ?string $Masquerade=NULL):
 	string {
 
