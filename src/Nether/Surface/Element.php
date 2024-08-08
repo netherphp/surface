@@ -16,12 +16,12 @@ implements Stringable {
 	public string
 	$Area;
 
-	#[Common\Meta\PropertyFactory('FromArray', 'JSModules')]
+	//#[Common\Meta\PropertyFactory('FromArray', 'JSModules')]
 	#[Common\Meta\Info('Define any JS module files associated with this widget. Subclasses should (re)define this.')]
 	public array|Common\Datastore
 	$JSModules = [];
 
-	#[Common\Meta\PropertyFactory('FromArray', 'JSReady')]
+	//#[Common\Meta\PropertyFactory('FromArray', 'JSReady')]
 	#[Common\Meta\Info('Define any JS lines to print as document ready code.')]
 	public array|Common\Datastore
 	$JSReady = [];
@@ -78,6 +78,13 @@ implements Stringable {
 		return $this->Render();
 	}
 
+	public function
+	OnWith(iterable $Props):
+	static {
+
+		return $this;
+	}
+
 	static public function
 	FromSurface(Engine $Surface):
 	static {
@@ -111,6 +118,8 @@ implements Stringable {
 
 			$Output->{$Key} = $Val;
 		}
+
+		$Output->OnWith($Props);
 
 		return $Output;
 	}
