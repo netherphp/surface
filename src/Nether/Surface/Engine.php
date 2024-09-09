@@ -304,6 +304,13 @@ class Engine {
 		return $this->Themes[array_key_first($this->Themes)];
 	}
 
+	public function
+	GetPathToDesignFile(string $Theme='default'):
+	string {
+
+		return sprintf('%s/%s/design.php', $this->ThemeRoot, $Theme);
+	}
+
 	////////////////////////////////////////////////////////////////
 	////////////////////////////////////////////////////////////////
 
