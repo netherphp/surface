@@ -170,6 +170,27 @@ class Engine {
 		return $this;
 	}
 
+	#[Common\Meta\Date('2024-09-12')]
+	public function
+	PushInto(string $Key, ...$Argv):
+	static {
+
+		if(!is_a($this->Get($Key), Common\Datastore::class))
+		$this->Set($Key, new Common\Datastore);
+
+		////////
+
+		$Store = $this->Get($Key);
+		$Arg = NULL;
+
+		foreach($Argv as $Arg)
+		$Store->Push($Arg);
+
+		////////
+
+		return $this;
+	}
+
 	public function
 	Show(string $Key, bool $Encode=TRUE):
 	static {
