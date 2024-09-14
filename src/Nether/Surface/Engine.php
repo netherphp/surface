@@ -172,8 +172,14 @@ class Engine {
 
 	#[Common\Meta\Date('2024-09-12')]
 	public function
-	PushInto(string $Key, ...$Argv):
+	PushInto(string|array $Key, ...$Argv):
 	static {
+
+		if(is_array($Key)) {
+			// @todo 2024-09-13
+		}
+
+		////////
 
 		if(!is_a($this->Get($Key), Common\Datastore::class))
 		$this->Set($Key, new Common\Datastore);
