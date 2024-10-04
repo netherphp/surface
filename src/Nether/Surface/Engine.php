@@ -128,11 +128,23 @@ class Engine {
 	////////////////////////////////////////////////////////////////
 
 	public function
-	Define(string $Key, mixed $Data):
+	Define(string|array $Key, mixed $Data=NULL):
 	static {
 
-		if(!$this->Data->HasKey($Key))
-		$this->Data[$Key] = $Data;
+		$K = NULL;
+		$D = NULL;
+
+		////////
+
+		if(is_string($Key))
+		$Key = [ $Key=> $Data ];
+
+		foreach($Key as $K=> $D) {
+			if(!$this->Data->HasKey($K))
+			$this->Data[$K] = $D;
+		}
+
+		////////
 
 		return $this;
 	}
