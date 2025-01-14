@@ -350,6 +350,13 @@ class Engine {
 		return sprintf('%s/%s/design.php', $this->ThemeRoot, $Theme);
 	}
 
+	public function
+	GetPathToArea(string $Filename, string $Theme='default'):
+	string {
+
+		return sprintf('%s/%s/area/%s', $this->ThemeRoot, $Theme, $Filename);
+	}
+
 	////////////////////////////////////////////////////////////////
 	////////////////////////////////////////////////////////////////
 
