@@ -351,6 +351,13 @@ class Engine {
 	}
 
 	public function
+	GetPathToDesignTemplate(string $Theme='default'):
+	string {
+
+		return sprintf('%s/%s/design.phtml', $this->ThemeRoot, $Theme);
+	}
+
+	public function
 	GetPathToArea(string $Filename, string $Theme='default'):
 	string {
 
