@@ -279,7 +279,7 @@ class Engine {
 	static {
 
 		$Scope['Area'] = $Area;
-		$Wrapper ??= $this->Get('Theme.Page.Wrapper') ?? 'page-wrapper';
+		$Wrapper ??= $this->Get('Theme.Page.Wrapper') ?? 'design/page-wrapper';
 		$Masq ??= $Area;
 
 		return $this->Area($Wrapper, $Scope, $Masq);
