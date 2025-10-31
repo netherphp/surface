@@ -78,8 +78,11 @@ implements Stringable {
 		return $this->Render();
 	}
 
+	////////////////////////////////////////////////////////////////
+	////////////////////////////////////////////////////////////////
+
 	public function
-	OnWith(iterable $Props):
+	OnFromWith(iterable $Props):
 	static {
 
 		return $this;
@@ -119,13 +122,19 @@ implements Stringable {
 			$Output->{$Key} = $Val;
 		}
 
-		$Output->OnWith($Props);
+		$Output->OnFromWith($Props);
 
 		return $Output;
 	}
 
 	////////////////////////////////////////////////////////////////
 	// LOCAL: Element Events ///////////////////////////////////////
+
+	// @todo 2025-10-30 i think an additional OnReady/OnRun thing is needed
+	// because the original intent of expanding this base widget was that
+	// OnRender would be used more for populating the Data and then the
+	// OnRenderPost would deal with rendering it such to make it rare to
+	// feel like it is needed to overwrite OnRenderPost.
 
 	#[Common\Meta\Info('Runs when a render begins prior to the generation.')]
 	protected function
